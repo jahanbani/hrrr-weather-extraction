@@ -2523,9 +2523,22 @@ def file_writing_worker(args):
             var_output_dir = os.path.join(output_dir, var_name, date_str)
             os.makedirs(var_output_dir, exist_ok=True)
             
-            # Write parquet file for this date
-            chunk_filename = f"{var_name}_chunk_{chunk_idx:04d}.parquet"
-            chunk_path = os.path.join(var_output_dir, chunk_filename)
+            # Write parquet file (single-file-per-day per variable if enabled)
+            single_file_mode = os.getenv('HRRR_SINGLE_FILE_PER_DAY', '1') in ('1', 'true', 'True')
+            if single_file_mode:
+                # Append-as-row-group approach: write/append one file per day/variable
+                day_file = os.path.join(var_output_dir, f"{date_str}.parquet")
+                # Use a simple append by reading existing (if any) and concatenating; safe for small day batches
+                if os.path.exists(day_file):
+                    try:
+                        existing = pd.read_parquet(day_file)
+                        date_data = pd.concat([existing, date_data])
+                    except Exception:
+                        pass
+                chunk_path = day_file
+            else:
+                chunk_filename = f"{var_name}_chunk_{chunk_idx:04d}.parquet"
+                chunk_path = os.path.join(var_output_dir, chunk_filename)
             
             # Time the actual file write
             file_write_start = time.time()
@@ -2552,8 +2565,26 @@ def file_writing_worker(args):
                         if nan_count > 0:
                             f.write(f"  {col}: {nan_count} NaN values\n")
             
-            # Ensure data types are compatible with pyarrow
-            date_data = date_data.astype('float32')  # Use float32 for better compatibility
+            # Ensure data types and apply optional scaling per variable
+            wind_vars = {"UWind80", "VWind80", "UWind10", "VWind10", "WindSpeed80", "WindSpeed10"}
+            rad_vars = {"rad", "vbd", "vdd"}
+            temp_vars = {"2tmp"}
+
+            scale_wind = os.getenv('HRRR_SCALE_WIND_INT16', '1') in ('1', 'true', 'True')
+            wind_scale = int(os.getenv('HRRR_WIND_SCALE', '100'))  # 0.01 m/s by default
+
+            if var_name in wind_vars and scale_wind:
+                # Scale to int16 with configured precision
+                date_data = (date_data * wind_scale).round().astype('int16')
+            elif var_name in rad_vars:
+                # Radiation: 0.1 precision → int16
+                date_data = (date_data * 10).round().astype('int16')
+            elif var_name in temp_vars:
+                # Temperature: (T - 250) * 100 as int16 (0.01 K)
+                date_data = ((date_data - 250.0) * 100).round().astype('int16')
+            else:
+                # Default float32
+                date_data = date_data.astype('float32')
             
             # Try pyarrow first, fallback to fastparquet if it fails
             try:
@@ -2576,7 +2607,10 @@ def file_writing_worker(args):
             write_stats['total_size_mb'] += file_size_mb
             write_stats['write_times'].append(file_write_time)
             
-            print(f"  Wrote {chunk_filename} ({file_size_mb:.1f} MB) in {file_write_time:.2f}s")
+            if single_file_mode:
+                print(f"  Wrote {var_name}/{date_str}.parquet ({file_size_mb:.1f} MB) in {file_write_time:.2f}s")
+            else:
+                print(f"  Wrote {chunk_filename} ({file_size_mb:.1f} MB) in {file_write_time:.2f}s")
             
             # Optionally write individual mapping files if requested
             if create_individual_mappings:
@@ -3779,9 +3813,21 @@ def extract_full_grid_optimized_with_preloaded_data(
     print("Phase 10: Post-processing...")
     
     # Add wind speed calculations if U and V components are present
+    drop_uv = os.getenv('HRRR_DROP_UV_AFTER_WS', '1') in ('1', 'true', 'True')
     if any(var in SELECTORS for var in ['UWind80', 'VWind80', 'UWind10', 'VWind10']):
         print("Adding wind speed calculations...")
         add_wind_speed_calculations(output_dir)
+        if drop_uv:
+            # Remove U/V directories to save space
+            for uv_var in ['UWind80', 'VWind80', 'UWind10', 'VWind10']:
+                uv_dir = os.path.join(output_dir, uv_var)
+                if os.path.exists(uv_dir):
+                    try:
+                        import shutil
+                        shutil.rmtree(uv_dir)
+                        print(f"Dropped U/V data: {uv_dir}")
+                    except Exception as e:
+                        print(f"Warning: could not remove {uv_dir}: {e}")
     
     # Create final resume metadata
     if enable_resume:
