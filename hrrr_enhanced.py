@@ -49,6 +49,7 @@ DEFAULT_HOURS_LIST = ["0", "1"]
 
 def extract_specific_locations_enhanced(
     config: Optional[HRRRConfig] = None,
+    grib_path: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Enhanced version of specific locations extraction with better error handling and monitoring."""
 
@@ -99,10 +100,10 @@ def extract_specific_locations_enhanced(
             config.solar_csv_path,
         )
 
-        # Get the GRIB data path
-        from prereise.gather.const import get_grib_data_path
-
-        grib_path = get_grib_data_path()
+        # Get the GRIB data path (use provided path if available)
+        if grib_path is None:
+            from prereise.gather.const import get_grib_data_path
+            grib_path = get_grib_data_path()
 
         if grib_path is None:
             logger.error("❌ No GRIB data path found!")
@@ -254,7 +255,10 @@ def extract_specific_locations_enhanced(
         return None
 
 
-def extract_full_grid_enhanced(config: Optional[HRRRConfig] = None) -> Dict[str, Any]:
+def extract_full_grid_enhanced(
+    config: Optional[HRRRConfig] = None,
+    grib_path: Optional[str] = None,
+) -> Dict[str, Any]:
     """Enhanced version of full grid extraction with better error handling and monitoring."""
 
     if config is None:
@@ -270,7 +274,8 @@ def extract_full_grid_enhanced(config: Optional[HRRRConfig] = None) -> Dict[str,
         # Get the GRIB data path
         from prereise.gather.const import SELECTORS, get_grib_data_path
 
-        grib_path = get_grib_data_path()
+        if grib_path is None:
+            grib_path = get_grib_data_path()
 
         if grib_path is None:
             logger.error("❌ No GRIB data path found!")
@@ -382,6 +387,7 @@ def extract_region_data_enhanced(
     use_parallel: bool = True,
     num_workers: int = 4,
     enable_resume: bool = True,
+    grib_path: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Extract HRRR data for a specific geographic region with quarterly (15-min) resolution.
@@ -444,9 +450,9 @@ def extract_region_data_enhanced(
         os.makedirs(output_dir, exist_ok=True)
 
         # Get the GRIB data path
-        from prereise.gather.const import get_grib_data_path
-
-        grib_path = get_grib_data_path()
+        if grib_path is None:
+            from prereise.gather.const import get_grib_data_path
+            grib_path = get_grib_data_path()
 
         if grib_path is None:
             logger.error("❌ No GRIB data path found!")
@@ -592,6 +598,7 @@ def extract_multiple_regions_enhanced(
     use_parallel: bool = True,
     num_workers: int = 4,
     enable_resume: bool = True,
+    grib_path: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Extract HRRR data for multiple geographic regions with quarterly resolution.
@@ -643,9 +650,9 @@ def extract_multiple_regions_enhanced(
         os.makedirs(base_output_dir, exist_ok=True)
 
         # Get the GRIB data path
-        from prereise.gather.const import get_grib_data_path
-
-        grib_path = get_grib_data_path()
+        if grib_path is None:
+            from prereise.gather.const import get_grib_data_path
+            grib_path = get_grib_data_path()
 
         if grib_path is None:
             logger.error("❌ No GRIB data path found!")
@@ -1036,9 +1043,16 @@ def main_enhanced():
     # Uncomment the line below to run full grid extraction
     # result = extract_full_grid_enhanced(config)
 
+    # Resolve GRIB path once and pass to called functions
+    try:
+        from prereise.gather.const import get_grib_data_path
+        resolved_grib_path = get_grib_data_path()
+    except Exception:
+        resolved_grib_path = None
+
     # Option 2: Specific Locations Extraction (wind.csv + solar.csv)
     # Uncomment the line below to run specific locations extraction
-    # result = extract_specific_locations_enhanced(config)
+    # result = extract_specific_locations_enhanced(config, grib_path=resolved_grib_path)
 
     # Option 3: Region Extraction (NEW - for testing quarterly data)
     # Uncomment the line below to run region extraction
