@@ -152,9 +152,6 @@ def extract_specific_locations_enhanced(
             # Use our new single-pass extraction function
             logger.info("🎯 Using our new optimized extraction function")
 
-            # Extract location-specific data using DAY-BY-DAY PROCESSING
-            from extract_specific_points_daily import extract_specific_points_daily
-
             # Check memory before extraction
             check_memory_usage()
 
