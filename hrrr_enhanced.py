@@ -1068,8 +1068,11 @@ def main_enhanced():
     # result = extract_specific_locations_enhanced(config, grib_path=resolved_grib_path)
 
     # Option 3: Region Extraction (NEW - for testing quarterly data)
-    # Uncomment the line below to run region extraction
-    result = test_region_extraction_enhanced(config)
+    # Uncomment the line below to run region extraction test helper
+    # result = test_region_extraction_enhanced(config)
+
+    # No default run selected
+    result = None
 
     # ============================================================================
     # END OF CHOICES
