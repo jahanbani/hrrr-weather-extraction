@@ -74,23 +74,26 @@ def extract_specific_locations_enhanced(
         # Load location data
         logger.info("📊 Loading location data...")
 
-        wind_df = pd.read_csv(config.wind_csv_path)
-        solar_df = pd.read_csv(config.solar_csv_path)
+        # Read only the required columns with dtypes for faster parsing
+        usecols = ["pid", "lat", "lon"]
+        dtypes = {"pid": "string", "lat": "float64", "lon": "float64"}
+        wind_locations = pd.read_csv(
+            config.wind_csv_path, usecols=usecols, dtype=dtypes, engine="pyarrow"
+        )
+        solar_locations = pd.read_csv(
+            config.solar_csv_path, usecols=usecols, dtype=dtypes, engine="pyarrow"
+        )
 
         logger.info(
-            f"✅ Loaded {len(wind_df)} wind locations from {config.wind_csv_path}"
+            "✅ Loaded wind locations: %d from %s",
+            len(wind_locations),
+            config.wind_csv_path,
         )
         logger.info(
-            f"✅ Loaded {len(solar_df)} solar locations from {config.solar_csv_path}"
+            "✅ Loaded solar locations: %d from %s",
+            len(solar_locations),
+            config.solar_csv_path,
         )
-
-        # Select only required columns
-        wind_locations = wind_df[["pid", "lat", "lon"]].copy()
-        solar_locations = solar_df[["pid", "lat", "lon"]].copy()
-
-        logger.info(f"📊 Separated locations:")
-        logger.info(f"   Wind locations: {len(wind_locations)}")
-        logger.info(f"   Solar locations: {len(solar_locations)}")
 
         # Get the GRIB data path
         from prereise.gather.const import get_grib_data_path
