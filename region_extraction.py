@@ -94,6 +94,8 @@ def extract_region_data_quarterly(
     use_parallel: bool = True,
     num_workers: int = 4,
     enable_resume: bool = True,
+    log_grib_discovery: bool = False,
+    log_grib_max: int = 50,
 ) -> Dict[str, Any]:
     """
     Extract HRRR data for a specific geographic region with quarterly (15-min) resolution.
@@ -189,9 +191,9 @@ def extract_region_data_quarterly(
             files.extend(glob.glob(pattern))
 
     logger.info(f"   Found {len(files)} GRIB files")
-    if LOG_GRIB_DISCOVERY and files:
+    if (LOG_GRIB_DISCOVERY or log_grib_discovery) and files:
         # Log up to LOG_GRIB_MAX file paths for inspection
-        for fp in sorted(files)[:LOG_GRIB_MAX]:
+        for fp in sorted(files)[: (LOG_GRIB_MAX if LOG_GRIB_DISCOVERY else log_grib_max)]:
             logger.info(f"      🗂️  {fp}")
         # Basic breakdown of subset vs plain
         subset_cnt = sum(1 for f in files if os.path.basename(f).startswith("subset_"))
@@ -199,7 +201,7 @@ def extract_region_data_quarterly(
             "      Summary: subset=%d, plain=%d (showing up to %d paths)",
             subset_cnt,
             len(files) - subset_cnt,
-            LOG_GRIB_MAX,
+            (LOG_GRIB_MAX if LOG_GRIB_DISCOVERY else log_grib_max),
         )
 
     # Combine all selectors
@@ -498,15 +500,15 @@ def extract_multiple_regions_quarterly_optimized(
             files.extend(glob.glob(pattern))
 
     logger.info(f"   Found {len(files)} GRIB files")
-    if LOG_GRIB_DISCOVERY and files:
-        for fp in sorted(files)[:LOG_GRIB_MAX]:
+    if (LOG_GRIB_DISCOVERY or log_grib_discovery) and files:
+        for fp in sorted(files)[: (LOG_GRIB_MAX if LOG_GRIB_DISCOVERY else log_grib_max)]:
             logger.info(f"      🗂️  {fp}")
         subset_cnt = sum(1 for f in files if os.path.basename(f).startswith("subset_"))
         logger.info(
             "      Summary: subset=%d, plain=%d (showing up to %d paths)",
             subset_cnt,
             len(files) - subset_cnt,
-            LOG_GRIB_MAX,
+            (LOG_GRIB_MAX if LOG_GRIB_DISCOVERY else log_grib_max),
         )
 
     # Combine all selectors
@@ -1291,6 +1293,8 @@ def extract_multiple_regions_quarterly(
     use_parallel: bool = True,
     num_workers: int = 4,
     enable_resume: bool = True,
+    log_grib_discovery: bool = False,
+    log_grib_max: int = 50,
 ) -> Dict[str, Any]:
     """
     Extract HRRR data for multiple geographic regions with quarterly resolution.
@@ -1355,15 +1359,25 @@ def extract_multiple_regions_quarterly(
             files.extend(glob.glob(pattern))
 
     logger.info(f"   Found {len(files)} GRIB files")
-    if LOG_GRIB_DISCOVERY and files:
-        for fp in sorted(files)[:LOG_GRIB_MAX]:
+    if (LOG_GRIB_DISCOVERY or log_grib_discovery) and files:
+        for fp in sorted(files)[: (LOG_GRIB_MAX if LOG_GRIB_DISCOVERY else log_grib_max)]:
             logger.info(f"      🗂️  {fp}")
         subset_cnt = sum(1 for f in files if os.path.basename(f).startswith("subset_"))
         logger.info(
             "      Summary: subset=%d, plain=%d (showing up to %d paths)",
             subset_cnt,
             len(files) - subset_cnt,
-            LOG_GRIB_MAX,
+            (LOG_GRIB_MAX if LOG_GRIB_DISCOVERY else log_grib_max),
+        )
+    if (LOG_GRIB_DISCOVERY or log_grib_discovery) and files:
+        for fp in sorted(files)[: (LOG_GRIB_MAX if LOG_GRIB_DISCOVERY else log_grib_max)]:
+            logger.info(f"      🗂️  {fp}")
+        subset_cnt = sum(1 for f in files if os.path.basename(f).startswith("subset_"))
+        logger.info(
+            "      Summary: subset=%d, plain=%d (showing up to %d paths)",
+            subset_cnt,
+            len(files) - subset_cnt,
+            (LOG_GRIB_MAX if LOG_GRIB_DISCOVERY else log_grib_max),
         )
 
     # Combine all selectors
