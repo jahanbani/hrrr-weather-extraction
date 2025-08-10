@@ -267,8 +267,8 @@ def extract_full_grid_enhanced(
     log_system_info()
 
     try:
-        # Get the GRIB data path and selector mapping compatible with full-grid extractor
-        from prereise.gather.const import SELECTORS, get_grib_data_path
+        # Get the GRIB data path; build selector mapping using GRIB full names
+        from prereise.gather.const import get_grib_data_path
 
         if grib_path is None:
             grib_path = get_grib_data_path()
@@ -293,7 +293,9 @@ def extract_full_grid_enhanced(
         END = config.end_date
 
         logger.info(f"📅 Date range: {START.date()} to {END.date()}")
-        logger.info(f"📊 Variables: {list(SELECTORS.keys())}")
+        # Combine wind and solar selector names (match grb.name values)
+        full_name_selectors = {**config.wind_selectors, **config.solar_selectors}
+        logger.info(f"📊 Variables: {list(full_name_selectors.keys())}")
 
         # Check disk space for full grid extraction
         logger.info("💾 Checking disk space for full grid extraction...")
@@ -320,7 +322,7 @@ def extract_full_grid_enhanced(
             END=END,
             DATADIR=grib_path,
             DEFAULT_HOURS_FORECASTED=config.hours_forecasted,
-            SELECTORS=SELECTORS,
+            SELECTORS=full_name_selectors,
             output_dir=output_dirs["full_grid"],
             use_aggressive_settings=True,  # Use ALL 36 CPUs and 256GB RAM efficiently
             enable_resume=True,  # Enable resume functionality
