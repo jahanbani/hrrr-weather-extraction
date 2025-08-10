@@ -42,7 +42,8 @@ if not logging.getLogger().handlers:
 logger = logging.getLogger(__name__)
 
 
-# Hours list now provided via config (HRRRConfig.hours_forecasted)
+# Default forecast hours list used by extraction (f00 and f01)
+DEFAULT_HOURS_LIST = ["0", "1"]
 
 
 def count_csv_rows(csv_path: str) -> int:
@@ -156,7 +157,7 @@ def extract_specific_locations_enhanced(
                 START=START,
                 END=END,
                 DATADIR=grib_path,
-                DEFAULT_HOURS_FORECASTED=config.hours_forecasted,  # e.g., f00 and f01
+                DEFAULT_HOURS_FORECASTED=DEFAULT_HOURS_LIST,  # e.g., f00 and f01
                 wind_selectors=config.wind_selectors,
                 solar_selectors=config.solar_selectors,
                 wind_output_dir=output_dirs["wind"],
@@ -319,7 +320,7 @@ def extract_full_grid_enhanced(
             START=START,
             END=END,
             DATADIR=grib_path,
-            DEFAULT_HOURS_FORECASTED=config.hours_forecasted,
+            DEFAULT_HOURS_FORECASTED=DEFAULT_HOURS_LIST,
             SELECTORS=config.SELECTORS,
             output_dir=output_dirs["full_grid"],
             use_aggressive_settings=True,  # Use ALL 36 CPUs and 256GB RAM efficiently
@@ -505,7 +506,7 @@ def extract_region_data_enhanced(
                 START=START,
                 END=END,
                 DATADIR=grib_path,
-                 DEFAULT_HOURS_FORECASTED=config.hours_forecasted,  # e.g., f00 and f01
+                 DEFAULT_HOURS_FORECASTED=DEFAULT_HOURS_LIST,  # e.g., f00 and f01
                 wind_selectors=config.wind_selectors,
                 solar_selectors=config.solar_selectors,
                 output_dir=output_dir,
@@ -708,7 +709,7 @@ def extract_multiple_regions_enhanced(
                 START=START,
                 END=END,
                 DATADIR=grib_path,
-                 DEFAULT_HOURS_FORECASTED=config.hours_forecasted,  # e.g., f00 and f01
+                 DEFAULT_HOURS_FORECASTED=DEFAULT_HOURS_LIST,  # e.g., f00 and f01
                 wind_selectors=config.wind_selectors,
                 solar_selectors=config.solar_selectors,
                 base_output_dir=base_output_dir,
