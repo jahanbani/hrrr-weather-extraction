@@ -9,7 +9,6 @@ import os
 import warnings
 from typing import Any, Dict, Optional, List
 
-import pandas as pd
 
 # Import enhanced utilities
 from config_unified import DEFAULT_CONFIG, HRRRConfig
@@ -47,6 +46,16 @@ logger = logging.getLogger(__name__)
 DEFAULT_HOURS_LIST = ["0", "1"]
 
 
+def count_csv_rows(csv_path: str) -> int:
+    """Count data rows in a CSV file (excluding header) efficiently."""
+    try:
+        with open(csv_path, "r", encoding="utf-8", errors="ignore") as f:
+            # Subtract 1 for header if present
+            return max(sum(1 for _ in f) - 1, 0)
+    except FileNotFoundError:
+        return 0
+
+
 def extract_specific_locations_enhanced(
     config: Optional[HRRRConfig] = None,
     grib_path: Optional[str] = None,
@@ -77,28 +86,13 @@ def extract_specific_locations_enhanced(
         create_output_directories(output_dirs)
 
         # Load location data
-        logger.info("📊 Loading location data...")
+        logger.info("📊 Counting location rows in CSVs (no full load)...")
 
-        # Read only the required columns with dtypes for faster parsing
-        usecols = ["pid", "lat", "lon"]
-        dtypes = {"pid": "string", "lat": "float64", "lon": "float64"}
-        wind_locations = pd.read_csv(
-            config.wind_csv_path, usecols=usecols, dtype=dtypes, engine="pyarrow"
-        )
-        solar_locations = pd.read_csv(
-            config.solar_csv_path, usecols=usecols, dtype=dtypes, engine="pyarrow"
-        )
+        wind_count = count_csv_rows(config.wind_csv_path)
+        solar_count = count_csv_rows(config.solar_csv_path)
 
-        logger.info(
-            "✅ Loaded wind locations: %d from %s",
-            len(wind_locations),
-            config.wind_csv_path,
-        )
-        logger.info(
-            "✅ Loaded solar locations: %d from %s",
-            len(solar_locations),
-            config.solar_csv_path,
-        )
+        logger.info("✅ Wind locations: %d from %s", wind_count, config.wind_csv_path)
+        logger.info("✅ Solar locations: %d from %s", solar_count, config.solar_csv_path)
 
         # Get the GRIB data path (use provided path if available)
         if grib_path is None:
@@ -123,9 +117,9 @@ def extract_specific_locations_enhanced(
 
         logger.info("📋 Extraction Parameters:")
         logger.info(f"   Date range: {START.date()} to {END.date()}")
-        logger.info(f"   Wind locations: {len(wind_locations)}")
+        logger.info("   Wind locations: %d", wind_count)
         logger.info(f"   Wind variables: {list(config.wind_selectors.keys())}")
-        logger.info(f"   Solar locations: {len(solar_locations)}")
+        logger.info("   Solar locations: %d", solar_count)
         logger.info(f"   Solar variables: {list(config.solar_selectors.keys())}")
         logger.info(f"   Workers: {config.num_workers}")
         logger.info(f"   Chunk size: {config.chunk_size}")
@@ -176,7 +170,7 @@ def extract_specific_locations_enhanced(
             # End performance monitoring
             performance_monitor.end_operation(
                 files_processed=extraction_result.get("files_processed", 0),
-                points_extracted=len(wind_locations) + len(solar_locations),
+                points_extracted=wind_count + solar_count,
             )
 
             logger.info("✅ Day-by-day extraction completed!")
