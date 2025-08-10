@@ -197,19 +197,21 @@ def extract_specific_locations_enhanced(
         logger.info("=" * 40)
 
         if os.path.exists(output_dirs["wind"]):
-            wind_files = [
-                f for f in os.listdir(output_dirs["wind"]) if f.endswith(".parquet")
-            ]
+            with os.scandir(output_dirs["wind"]) as it:
+                wind_files = [entry.name for entry in it if entry.is_file() and entry.name.endswith(".parquet")]
             logger.info(
-                f"🌪️  Wind files: {len(wind_files)} files in {output_dirs['wind']}/"
+                "🌪️  Wind files: %d files in %s/",
+                len(wind_files),
+                output_dirs["wind"],
             )
 
         if os.path.exists(output_dirs["solar"]):
-            solar_files = [
-                f for f in os.listdir(output_dirs["solar"]) if f.endswith(".parquet")
-            ]
+            with os.scandir(output_dirs["solar"]) as it:
+                solar_files = [entry.name for entry in it if entry.is_file() and entry.name.endswith(".parquet")]
             logger.info(
-                f"☀️  Solar files: {len(solar_files)} files in {output_dirs['solar']}/"
+                "☀️  Solar files: %d files in %s/",
+                len(solar_files),
+                output_dirs["solar"],
             )
 
         if results.get("extraction"):
@@ -535,9 +537,8 @@ def extract_region_data_enhanced(
         logger.info("=" * 40)
 
         if os.path.exists(output_dir):
-            parquet_files = [
-                f for f in os.listdir(output_dir) if f.endswith(".parquet")
-            ]
+            with os.scandir(output_dir) as it:
+                parquet_files = [entry.name for entry in it if entry.is_file() and entry.name.endswith(".parquet")]
             logger.info(f"📊 Region files: {len(parquet_files)} files in {output_dir}/")
 
             # Show file sizes
@@ -734,11 +735,8 @@ def extract_multiple_regions_enhanced(
         logger.info("=" * 40)
 
         if os.path.exists(base_output_dir):
-            region_dirs = [
-                d
-                for d in os.listdir(base_output_dir)
-                if os.path.isdir(os.path.join(base_output_dir, d))
-            ]
+            with os.scandir(base_output_dir) as it:
+                region_dirs = [entry.name for entry in it if entry.is_dir()]
             logger.info(
                 f"📊 Region directories: {len(region_dirs)} in {base_output_dir}/"
             )
@@ -748,9 +746,8 @@ def extract_multiple_regions_enhanced(
 
             for region_dir in region_dirs:
                 region_path = os.path.join(base_output_dir, region_dir)
-                parquet_files = [
-                    f for f in os.listdir(region_path) if f.endswith(".parquet")
-                ]
+                with os.scandir(region_path) as it:
+                    parquet_files = [entry.name for entry in it if entry.is_file() and entry.name.endswith(".parquet")]
                 total_files += len(parquet_files)
 
                 region_size_mb = 0
