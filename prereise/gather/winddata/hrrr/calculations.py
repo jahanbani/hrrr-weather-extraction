@@ -2155,17 +2155,16 @@ def add_wind_speed_calculations(output_dir):
                 if os.path.exists(u_file) and os.path.exists(v_file):
                     u_df = pd.read_parquet(u_file)
                     v_df = pd.read_parquet(v_file)
-                    
-                    # Calculate wind speed for each grid point
-                    wind_speed_df = pd.DataFrame(index=df.index)
-                    
-                    for col in df.columns:
-                        if col in u_df.columns and col in v_df.columns:
-                            wind_speed_col = col.replace('UWind80', 'WindSpeed80').replace('VWind80', 'WindSpeed80').replace('UWind10', 'WindSpeed10').replace('VWind10', 'WindSpeed10')
-                            wind_speed_df[wind_speed_col] = np.sqrt(u_df[col]**2 + v_df[col]**2)
-                    
-                    # Round to exactly 3 decimal places by multiplying by 1000, rounding, then dividing
-                    wind_speed_df = (wind_speed_df * 1000).round().astype('int32') / 1000.0
+
+                    # Vectorized wind speed over common columns to avoid fragmented DataFrames
+                    common_cols = [c for c in u_df.columns if c in v_df.columns]
+                    if common_cols:
+                        wind_vals = np.sqrt(u_df[common_cols].to_numpy(dtype=float) ** 2 + v_df[common_cols].to_numpy(dtype=float) ** 2)
+                        wind_speed_df = pd.DataFrame(wind_vals, index=u_df.index, columns=common_cols)
+                        # Round to exactly 3 decimals
+                        wind_speed_df = (wind_speed_df * 1000).round().astype('int32') / 1000.0
+                    else:
+                        continue
                     
                     # Save wind speed data in the same date directory structure
                     wind_speed_var = 'WindSpeed80' if '80' in var_name else 'WindSpeed10'
