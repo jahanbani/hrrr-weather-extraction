@@ -125,6 +125,8 @@ def extract_specific_locations_enhanced(
 
         # Start performance monitoring
         performance_monitor.start_operation()
+        files_processed_metric = 0
+        points_extracted_metric = 0
 
         # Import our new optimized single-pass extraction function
         from extract_specific_points_daily_single_pass import (
@@ -166,11 +168,8 @@ def extract_specific_locations_enhanced(
                 batch_size=36,  # Process 36 days at a time (one day per CPU for full utilization)
             )
 
-            # End performance monitoring
-            performance_monitor.end_operation(
-                files_processed=extraction_result.get("files_processed", 0),
-                points_extracted=wind_count + solar_count,
-            )
+            files_processed_metric = extraction_result.get("files_processed", 0)
+            points_extracted_metric = wind_count + solar_count
 
             logger.info("✅ Day-by-day extraction completed!")
             results["extraction"] = extraction_result
@@ -181,6 +180,11 @@ def extract_specific_locations_enhanced(
 
             traceback.print_exc()
             results["extraction"] = None
+        finally:
+            performance_monitor.end_operation(
+                files_processed=files_processed_metric,
+                points_extracted=points_extracted_metric,
+            )
 
         # Show summary
         logger.info("\n📁 EXTRACTION SUMMARY")
@@ -303,6 +307,8 @@ def extract_full_grid_enhanced(
 
         # Start performance monitoring
         performance_monitor.start_operation()
+        files_processed_metric = 0
+        points_extracted_metric = 0
 
         # Use DAY-BY-DAY AGGRESSIVE optimization for maximum performance
         from prereise.gather.winddata.hrrr.calculations import (
@@ -320,11 +326,8 @@ def extract_full_grid_enhanced(
             enable_resume=True,  # Enable resume functionality
         )
 
-        # End performance monitoring
-        performance_monitor.end_operation(
-            files_processed=result.get("total_days", 0) * 24,  # Estimate files
-            points_extracted=result.get("data_points", 0),
-        )
+        files_processed_metric = result.get("total_days", 0) * 24
+        points_extracted_metric = result.get("data_points", 0)
 
         if result:
             logger.info(
@@ -368,6 +371,11 @@ def extract_full_grid_enhanced(
 
         traceback.print_exc()
         return None
+    finally:
+        performance_monitor.end_operation(
+            files_processed=files_processed_metric,
+            points_extracted=points_extracted_metric,
+        )
 
 
 def extract_region_data_enhanced(
@@ -471,6 +479,8 @@ def extract_region_data_enhanced(
 
         # Start performance monitoring
         performance_monitor.start_operation()
+        files_processed_metric = 0
+        points_extracted_metric = 0
 
         # Import the region extraction function
         from region_extraction import extract_region_data_quarterly
@@ -506,11 +516,8 @@ def extract_region_data_enhanced(
                 enable_resume=enable_resume,
             )
 
-            # End performance monitoring
-            performance_monitor.end_operation(
-                files_processed=extraction_result.get("files_processed", 0),
-                points_extracted=extraction_result.get("grid_points", 0),
-            )
+            files_processed_metric = extraction_result.get("files_processed", 0)
+            points_extracted_metric = extraction_result.get("grid_points", 0)
 
             logger.info("✅ Region extraction completed!")
             results["extraction"] = extraction_result
@@ -521,6 +528,11 @@ def extract_region_data_enhanced(
 
             traceback.print_exc()
             results["extraction"] = None
+        finally:
+            performance_monitor.end_operation(
+                files_processed=files_processed_metric,
+                points_extracted=points_extracted_metric,
+            )
 
         # Show summary
         logger.info("\n📁 EXTRACTION SUMMARY")
@@ -670,6 +682,8 @@ def extract_multiple_regions_enhanced(
 
         # Start performance monitoring
         performance_monitor.start_operation()
+        files_processed_metric = 0
+        points_extracted_metric = 0
 
         # Import the multi-region extraction function
         from region_extraction import extract_multiple_regions_quarterly
@@ -704,11 +718,8 @@ def extract_multiple_regions_enhanced(
                 enable_resume=enable_resume,
             )
 
-            # End performance monitoring
-            performance_monitor.end_operation(
-                files_processed=extraction_result.get("files_processed", 0),
-                points_extracted=extraction_result.get("total_grid_points", 0),
-            )
+            files_processed_metric = extraction_result.get("files_processed", 0)
+            points_extracted_metric = extraction_result.get("total_grid_points", 0)
 
             logger.info("✅ Multi-region extraction completed!")
             results["extraction"] = extraction_result
@@ -719,6 +730,11 @@ def extract_multiple_regions_enhanced(
 
             traceback.print_exc()
             results["extraction"] = None
+        finally:
+            performance_monitor.end_operation(
+                files_processed=files_processed_metric,
+                points_extracted=points_extracted_metric,
+            )
 
         # Show summary
         logger.info("\n📁 EXTRACTION SUMMARY")
@@ -873,6 +889,8 @@ def test_region_extraction_enhanced(
 
         # Start performance monitoring
         performance_monitor.start_operation()
+        files_processed_metric = 0
+        points_extracted_metric = 0
 
         # Import the multi-region extraction function
         from region_extraction import extract_multiple_regions_quarterly_optimized
@@ -909,11 +927,8 @@ def test_region_extraction_enhanced(
                 enable_resume=True,
             )
 
-            # End performance monitoring
-            performance_monitor.end_operation(
-                files_processed=extraction_result.get("files_processed", 0),
-                points_extracted=extraction_result.get("total_grid_points", 0),
-            )
+            files_processed_metric = extraction_result.get("files_processed", 0)
+            points_extracted_metric = extraction_result.get("total_grid_points", 0)
 
             logger.info("✅ Test region extraction completed!")
             results["extraction"] = extraction_result
@@ -924,6 +939,11 @@ def test_region_extraction_enhanced(
 
             traceback.print_exc()
             results["extraction"] = None
+        finally:
+            performance_monitor.end_operation(
+                files_processed=files_processed_metric,
+                points_extracted=points_extracted_metric,
+            )
 
         # Show summary
         logger.info("\n📁 TEST EXTRACTION SUMMARY")
