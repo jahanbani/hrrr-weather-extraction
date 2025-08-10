@@ -170,19 +170,18 @@ def extract_region_data_quarterly(
             "processing_time_seconds": time.time() - start_time,
         }
 
-    # Find all GRIB files in date range
+    # Find all GRIB files in date range (support plain and subset_* filenames)
     logger.info("🔍 Finding GRIB files...")
     date_range = pd.date_range(start=START, end=END, freq="1h")
     files = []
 
     for dt in date_range:
+        date_dir = os.path.join(DATADIR, dt.strftime("%Y%m%d"))
         for hours_forecasted in DEFAULT_HOURS_FORECASTED:
-            file_path = os.path.join(
-                DATADIR,
-                formatted_filename(dt, hours_forecasted=hours_forecasted),
-            )
-            if os.path.exists(file_path):
-                files.append(file_path)
+            hh = dt.strftime("%H")
+            ff = str(hours_forecasted).zfill(2)
+            pattern = os.path.join(date_dir, f"*hrrr.t{hh}z.wrfsubhf{ff}.grib2")
+            files.extend(glob.glob(pattern))
 
     logger.info(f"   Found {len(files)} GRIB files")
 
@@ -468,19 +467,18 @@ def extract_multiple_regions_quarterly_optimized(
     n_lats, n_lons = grid_lats.shape
     logger.info(f"   Grid dimensions: {n_lats} x {n_lons}")
 
-    # Find all GRIB files once
+    # Find all GRIB files once (support plain and subset_* filenames)
     logger.info("🔍 Finding GRIB files...")
     date_range = pd.date_range(start=START, end=END, freq="1h")
     files = []
 
     for dt in date_range:
+        date_dir = os.path.join(DATADIR, dt.strftime("%Y%m%d"))
         for hours_forecasted in DEFAULT_HOURS_FORECASTED:
-            file_path = os.path.join(
-                DATADIR,
-                formatted_filename(dt, hours_forecasted=hours_forecasted),
-            )
-            if os.path.exists(file_path):
-                files.append(file_path)
+            hh = dt.strftime("%H")
+            ff = str(hours_forecasted).zfill(2)
+            pattern = os.path.join(date_dir, f"*hrrr.t{hh}z.wrfsubhf{ff}.grib2")
+            files.extend(glob.glob(pattern))
 
     logger.info(f"   Found {len(files)} GRIB files")
 
@@ -1316,19 +1314,18 @@ def extract_multiple_regions_quarterly(
     n_lats, n_lons = grid_lats.shape
     logger.info(f"   Grid dimensions: {n_lats} x {n_lons}")
 
-    # Find all GRIB files once (shared across all regions)
+    # Find all GRIB files once (shared across all regions; include subset_* filenames)
     logger.info("🔍 Finding GRIB files...")
     date_range = pd.date_range(start=START, end=END, freq="1h")
     files = []
 
     for dt in date_range:
+        date_dir = os.path.join(DATADIR, dt.strftime("%Y%m%d"))
         for hours_forecasted in DEFAULT_HOURS_FORECASTED:
-            file_path = os.path.join(
-                DATADIR,
-                formatted_filename(dt, hours_forecasted=hours_forecasted),
-            )
-            if os.path.exists(file_path):
-                files.append(file_path)
+            hh = dt.strftime("%H")
+            ff = str(hours_forecasted).zfill(2)
+            pattern = os.path.join(date_dir, f"*hrrr.t{hh}z.wrfsubhf{ff}.grib2")
+            files.extend(glob.glob(pattern))
 
     logger.info(f"   Found {len(files)} GRIB files")
 
