@@ -11,6 +11,7 @@ import gc
 import glob
 import logging
 import os
+import os
 import re
 import time
 from collections import defaultdict
@@ -51,6 +52,10 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+# Optional runtime-controlled logging of discovered GRIB files
+LOG_GRIB_DISCOVERY = os.getenv("HRRR_LOG_GRIB_DISCOVERY", "0") == "1"
+LOG_GRIB_MAX = int(os.getenv("HRRR_LOG_GRIB_MAX", "50"))
 
 
 def compute_wind_speed_df(u_df: pd.DataFrame, v_df: pd.DataFrame) -> pd.DataFrame:
@@ -184,6 +189,18 @@ def extract_region_data_quarterly(
             files.extend(glob.glob(pattern))
 
     logger.info(f"   Found {len(files)} GRIB files")
+    if LOG_GRIB_DISCOVERY and files:
+        # Log up to LOG_GRIB_MAX file paths for inspection
+        for fp in sorted(files)[:LOG_GRIB_MAX]:
+            logger.info(f"      🗂️  {fp}")
+        # Basic breakdown of subset vs plain
+        subset_cnt = sum(1 for f in files if os.path.basename(f).startswith("subset_"))
+        logger.info(
+            "      Summary: subset=%d, plain=%d (showing up to %d paths)",
+            subset_cnt,
+            len(files) - subset_cnt,
+            LOG_GRIB_MAX,
+        )
 
     # Combine all selectors
     all_selectors = {**wind_selectors, **solar_selectors}
@@ -481,6 +498,16 @@ def extract_multiple_regions_quarterly_optimized(
             files.extend(glob.glob(pattern))
 
     logger.info(f"   Found {len(files)} GRIB files")
+    if LOG_GRIB_DISCOVERY and files:
+        for fp in sorted(files)[:LOG_GRIB_MAX]:
+            logger.info(f"      🗂️  {fp}")
+        subset_cnt = sum(1 for f in files if os.path.basename(f).startswith("subset_"))
+        logger.info(
+            "      Summary: subset=%d, plain=%d (showing up to %d paths)",
+            subset_cnt,
+            len(files) - subset_cnt,
+            LOG_GRIB_MAX,
+        )
 
     # Combine all selectors
     all_selectors = {**wind_selectors, **solar_selectors}
@@ -1328,6 +1355,16 @@ def extract_multiple_regions_quarterly(
             files.extend(glob.glob(pattern))
 
     logger.info(f"   Found {len(files)} GRIB files")
+    if LOG_GRIB_DISCOVERY and files:
+        for fp in sorted(files)[:LOG_GRIB_MAX]:
+            logger.info(f"      🗂️  {fp}")
+        subset_cnt = sum(1 for f in files if os.path.basename(f).startswith("subset_"))
+        logger.info(
+            "      Summary: subset=%d, plain=%d (showing up to %d paths)",
+            subset_cnt,
+            len(files) - subset_cnt,
+            LOG_GRIB_MAX,
+        )
 
     # Combine all selectors
     all_selectors = {**wind_selectors, **solar_selectors}
