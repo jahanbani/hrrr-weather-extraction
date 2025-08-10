@@ -90,6 +90,11 @@ class HRRRConfig:
     enable_progress_tracking: bool = True
     enable_memory_checks: bool = True
 
+    # Quarterly data (f01) control
+    read_f01_quarterly: bool = True
+    # Forecast hours to process (e.g., f00, f01)
+    hours_forecasted: List[str] = field(default_factory=lambda: ["0", "1"])
+
     # Region definitions for complex geometry support
     regions: Dict[str, Dict[str, Any]] = field(default_factory=lambda: {})
 
@@ -135,6 +140,15 @@ class HRRRConfig:
         # Set default active regions to SPP only for production use
         if self.active_regions is None:
             self.active_regions = ["spp_all"]  # Default to SPP only
+
+        # Enforce quarterly (f01) toggle on hours list
+        if not self.read_f01_quarterly:
+            # Ensure only f00 is used
+            self.hours_forecasted = ["0"]
+        else:
+            # Ensure f01 is included when quarterly is enabled
+            if "1" not in self.hours_forecasted:
+                self.hours_forecasted = list(dict.fromkeys(self.hours_forecasted + ["1"]))
 
     def validate(self) -> bool:
         """Validate configuration settings"""
