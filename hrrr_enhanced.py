@@ -42,8 +42,7 @@ if not logging.getLogger().handlers:
 logger = logging.getLogger(__name__)
 
 
-# Shared default hours list (consistent across functions)
-DEFAULT_HOURS_LIST = ["0", "1"]
+# Hours list now provided via config (HRRRConfig.hours_forecasted)
 
 
 def count_csv_rows(csv_path: str) -> int:
@@ -155,7 +154,7 @@ def extract_specific_locations_enhanced(
                 START=START,
                 END=END,
                 DATADIR=grib_path,
-                DEFAULT_HOURS_FORECASTED=DEFAULT_HOURS_LIST,  # Only f00 and f01
+                DEFAULT_HOURS_FORECASTED=config.hours_forecasted,  # e.g., f00 and f01
                 wind_selectors=config.wind_selectors,
                 solar_selectors=config.solar_selectors,
                 wind_output_dir=output_dirs["wind"],
@@ -265,7 +264,7 @@ def extract_full_grid_enhanced(
 
     try:
         # Get the GRIB data path
-        from prereise.gather.const import SELECTORS, get_grib_data_path
+        from prereise.gather.const import get_grib_data_path
 
         if grib_path is None:
             grib_path = get_grib_data_path()
@@ -290,7 +289,7 @@ def extract_full_grid_enhanced(
         END = config.end_date
 
         logger.info(f"📅 Date range: {START.date()} to {END.date()}")
-        logger.info(f"📊 Variables: {list(SELECTORS.keys())}")
+        logger.info(f"📊 Variables: {list(config.SELECTORS.keys())}")
 
         # Check disk space for full grid extraction
         logger.info("💾 Checking disk space for full grid extraction...")
@@ -314,8 +313,8 @@ def extract_full_grid_enhanced(
             START=START,
             END=END,
             DATADIR=grib_path,
-             DEFAULT_HOURS_FORECASTED=DEFAULT_HOURS_LIST,
-            SELECTORS=SELECTORS,
+            DEFAULT_HOURS_FORECASTED=config.hours_forecasted,
+            SELECTORS=config.SELECTORS,
             output_dir=output_dirs["full_grid"],
             use_aggressive_settings=True,  # Use ALL 36 CPUs and 256GB RAM efficiently
             enable_resume=True,  # Enable resume functionality
@@ -496,7 +495,7 @@ def extract_region_data_enhanced(
                 START=START,
                 END=END,
                 DATADIR=grib_path,
-                 DEFAULT_HOURS_FORECASTED=DEFAULT_HOURS_LIST,  # Only f00 and f01
+                 DEFAULT_HOURS_FORECASTED=config.hours_forecasted,  # e.g., f00 and f01
                 wind_selectors=config.wind_selectors,
                 solar_selectors=config.solar_selectors,
                 output_dir=output_dir,
@@ -695,7 +694,7 @@ def extract_multiple_regions_enhanced(
                 START=START,
                 END=END,
                 DATADIR=grib_path,
-                 DEFAULT_HOURS_FORECASTED=DEFAULT_HOURS_LIST,  # Only f00 and f01
+                 DEFAULT_HOURS_FORECASTED=config.hours_forecasted,  # e.g., f00 and f01
                 wind_selectors=config.wind_selectors,
                 solar_selectors=config.solar_selectors,
                 base_output_dir=base_output_dir,

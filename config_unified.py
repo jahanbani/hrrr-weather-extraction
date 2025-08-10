@@ -46,6 +46,9 @@ class HRRRConfig:
             "VWind80": "V component of wind",  # V component of wind at 80m
         }
     )
+    # Forecast hours to process (e.g., f00, f01)
+    hours_forecasted: List[str] = field(default_factory=lambda: ["0", "1"])
+
 
     # Solar variables to extract
     solar_selectors: Dict[str, str] = field(
