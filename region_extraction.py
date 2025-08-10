@@ -53,6 +53,28 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def compute_wind_speed_df(u_df: pd.DataFrame, v_df: pd.DataFrame) -> pd.DataFrame:
+    """Compute wind speed √(U^2 + V^2) with rounding/typing to match storage convention."""
+    start = time.time()
+    # Align on common columns and index
+    common_cols = [c for c in u_df.columns if c in v_df.columns]
+    if not isinstance(u_df.index, pd.DatetimeIndex) and "time" in u_df.columns:
+        u_df = u_df.set_index("time")
+    if not isinstance(v_df.index, pd.DatetimeIndex) and "time" in v_df.columns:
+        v_df = v_df.set_index("time")
+    wind_speed = pd.DataFrame(index=u_df.index)
+    for col in common_cols:
+        wind_speed[col] = np.sqrt(u_df[col] ** 2 + v_df[col] ** 2)
+    # Round to 3 decimals, store as float32
+    wind_speed = (wind_speed * 1000).round().astype("int32") / 1000.0
+    wind_speed = wind_speed.astype("float32")
+    logging.getLogger(__name__).debug(
+        "compute_wind_speed_df took %.3fs for %d cols", time.time() - start, len(common_cols)
+    )
+    wind_speed.index.name = "time"
+    return wind_speed
+
+
 def extract_region_data_quarterly(
     region_bounds: Dict[str, float],
     START,
@@ -170,6 +192,7 @@ def extract_region_data_quarterly(
 
     # Process each variable
     results = {}
+    in_memory_vars: Dict[str, pd.DataFrame] = {}
 
     for var_name, var_selector in all_selectors.items():
         logger.info(f"📊 Processing variable: {var_name}")
@@ -294,6 +317,10 @@ def extract_region_data_quarterly(
             output_file = os.path.join(output_dir, f"{region_name}_{var_name}.parquet")
             df.to_parquet(output_file, compression=compression, engine="pyarrow")
 
+            # Keep in-memory only for wind U/V to avoid future re-reads
+            if var_name in {"UWind10", "VWind10", "UWind80", "VWind80"}:
+                in_memory_vars[var_name] = df
+
             file_size_mb = os.path.getsize(output_file) / (1024 * 1024)
             var_time = time.time() - var_start_time
 
@@ -325,13 +352,17 @@ def extract_region_data_quarterly(
             u_var = wind_speed_vars[i]
             v_var = wind_speed_vars[i + 1]
 
-            # Load the U and V data
-            u_file = os.path.join(output_dir, f"{region_name}_{u_var}.parquet")
-            v_file = os.path.join(output_dir, f"{region_name}_{v_var}.parquet")
-
-            if os.path.exists(u_file) and os.path.exists(v_file):
-                u_df = pd.read_parquet(u_file)
-                v_df = pd.read_parquet(v_file)
+            # Prefer in-memory dataframes to avoid disk I/O; fallback to reading
+            u_df = in_memory_vars.get(u_var)
+            v_df = in_memory_vars.get(v_var)
+            if u_df is None or v_df is None:
+                u_file = os.path.join(output_dir, f"{region_name}_{u_var}.parquet")
+                v_file = os.path.join(output_dir, f"{region_name}_{v_var}.parquet")
+                if os.path.exists(u_file) and os.path.exists(v_file):
+                    u_df = pd.read_parquet(u_file)
+                    v_df = pd.read_parquet(v_file)
+                else:
+                    continue
 
                 # Calculate wind speed
                 wind_speed_name = (
@@ -339,14 +370,7 @@ def extract_region_data_quarterly(
                     .replace("Wind10", "WindSpeed10")
                     .replace("Wind80", "WindSpeed80")
                 )
-                wind_speed_df = pd.DataFrame(index=u_df.index)
-
-                for col in u_df.columns:
-                    if col in v_df.columns:
-                        wind_speed_df[col] = np.sqrt(u_df[col] ** 2 + v_df[col] ** 2)
-
-                # Round to 3 decimal places
-                wind_speed_df = (wind_speed_df * 1000).round().astype("int32") / 1000.0
+                wind_speed_df = compute_wind_speed_df(u_df, v_df)
 
                 # Save wind speed
                 wind_speed_file = os.path.join(
