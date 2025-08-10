@@ -4,15 +4,12 @@ Enhanced HRRR data extraction with improved error handling, monitoring, and vali
 This is a safe enhancement that doesn't modify existing files.
 """
 
-import datetime
 import logging
 import os
 import warnings
-from typing import Any, Dict, Optional, Tuple, List
+from typing import Any, Dict, Optional, List
 
 import pandas as pd
-import numpy as np
-import pygrib
 
 # Import enhanced utilities
 from config_unified import DEFAULT_CONFIG, HRRRConfig
@@ -33,15 +30,16 @@ warnings.filterwarnings(
 )
 warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*fs.*")
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler("hrrr_enhanced.log"),
-        logging.StreamHandler(),
-    ],
-)
+# Configure logging (guard against overriding existing app logging)
+if not logging.getLogger().handlers:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[
+            logging.FileHandler("hrrr_enhanced.log"),
+            logging.StreamHandler(),
+        ],
+    )
 logger = logging.getLogger(__name__)
 
 
