@@ -1,0 +1,20 @@
+# Enhanced HRRR Extraction Requirements
+# Core dependencies
+pandas>=1.5.0
+numpy>=1.21.0
+pygrib>=2.1.0
+tqdm>=4.64.0
+
+# Enhanced features
+click>=8.0.0
+psutil>=5.9.0
+pyyaml>=6.0
+
+# Optional dependencies for advanced features
+# aiofiles>=0.8.0  # For async file operations
+# pydantic>=1.10.0  # For data validation
+
+# Development dependencies
+# pytest>=7.0.0
+# black>=22.0.0
+# flake8>=5.0.0 
