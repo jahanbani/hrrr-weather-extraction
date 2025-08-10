@@ -441,6 +441,8 @@ def extract_multiple_regions_quarterly_optimized(
     use_parallel: bool = True,
     num_workers: int = 4,
     enable_resume: bool = True,
+    log_grib_discovery: bool = False,
+    log_grib_max: int = 50,
 ) -> Dict[str, Any]:
     """
     OPTIMIZED: Extract HRRR data for multiple geographic regions with quarterly resolution.
@@ -500,6 +502,16 @@ def extract_multiple_regions_quarterly_optimized(
             files.extend(glob.glob(pattern))
 
     logger.info(f"   Found {len(files)} GRIB files")
+    if (LOG_GRIB_DISCOVERY or log_grib_discovery) and files:
+        for fp in sorted(files)[: (LOG_GRIB_MAX if LOG_GRIB_DISCOVERY else log_grib_max)]:
+            logger.info(f"      🗂️  {fp}")
+        subset_cnt = sum(1 for f in files if os.path.basename(f).startswith("subset_"))
+        logger.info(
+            "      Summary: subset=%d, plain=%d (showing up to %d paths)",
+            subset_cnt,
+            len(files) - subset_cnt,
+            (LOG_GRIB_MAX if LOG_GRIB_DISCOVERY else log_grib_max),
+        )
     if (LOG_GRIB_DISCOVERY or log_grib_discovery) and files:
         for fp in sorted(files)[: (LOG_GRIB_MAX if LOG_GRIB_DISCOVERY else log_grib_max)]:
             logger.info(f"      🗂️  {fp}")

@@ -929,6 +929,8 @@ def test_region_extraction_enhanced(
                 use_parallel=True,
                 num_workers=config.num_workers,
                 enable_resume=True,
+                log_grib_discovery=config.log_grib_discovery,
+                log_grib_max=config.log_grib_max,
             )
 
             files_processed_metric = extraction_result.get("files_processed", 0)

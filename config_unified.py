@@ -49,6 +49,7 @@ class HRRRConfig:
     # Forecast hours to process (e.g., f00, f01)
     hours_forecasted: List[str] = field(default_factory=lambda: ["0", "1"])
 
+
     # Solar variables to extract
     solar_selectors: Dict[str, str] = field(
         default_factory=lambda: {
@@ -134,7 +135,7 @@ class HRRRConfig:
         if self.start_date is None:
             self.start_date = datetime(2022, 12, 31, 0, 0, 0)
         if self.end_date is None:
-            self.end_date = datetime(2022, 12, 31, 23, 0, 0)
+            self.end_date = datetime(2023, 1, 1, 0, 0, 0)
 
         # Set default regions if not provided
         if not self.regions:
@@ -151,9 +152,7 @@ class HRRRConfig:
         else:
             # Ensure f01 is included when quarterly is enabled
             if "1" not in self.hours_forecasted:
-                self.hours_forecasted = list(
-                    dict.fromkeys(self.hours_forecasted + ["1"])
-                )
+                self.hours_forecasted = list(dict.fromkeys(self.hours_forecasted + ["1"]))
 
     def validate(self) -> bool:
         """Validate configuration settings"""
