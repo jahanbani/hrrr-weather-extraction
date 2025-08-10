@@ -1054,7 +1054,9 @@ def main_enhanced():
 
     # Option 1: Full Grid Extraction (1.9M+ points)
     # Uncomment the line below to run full grid extraction
-    # result = extract_full_grid_enhanced(config)
+    if getattr(config, "run_full_grid", False):
+        result = extract_full_grid_enhanced(config)
+        return result
 
     # Resolve GRIB path once and pass to called functions
     try:
