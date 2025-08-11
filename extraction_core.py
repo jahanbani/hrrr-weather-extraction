@@ -13,10 +13,25 @@ import numpy as np
 from datetime import datetime, timedelta
 import pygrib
 import multiprocessing as mp
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed, ThreadPoolExecutor
 import time
 import warnings
 from collections import defaultdict
+import gc
+
+# Import our advanced memory optimizer
+try:
+    from memory_optimizer import memory_monitor, optimize_dataframe_memory, force_memory_cleanup
+    MEMORY_OPTIMIZER_AVAILABLE = True
+except ImportError:
+    MEMORY_OPTIMIZER_AVAILABLE = False
+    logger = logging.getLogger(__name__)
+    logger.warning("⚠️  Memory optimizer not available - using basic memory management")
+
+# Context manager fallback
+class nullcontext:
+    def __enter__(self): return None
+    def __exit__(self, *args): return None
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -99,27 +114,44 @@ def extract_specific_points_daily_single_pass(
         
         logger.info(f"📅 Prepared {len(day_tasks)} days for processing")
         
-        # Use multiprocessing for parallel execution
+        # Use advanced parallel processing with memory optimization
         if use_parallel and num_workers > 1:
             logger.info(f"🚀 Using {num_workers} parallel processes for day processing...")
             logger.info(f"   Expected speedup: ~{num_workers}x faster than sequential")
             logger.info(f"   CPU cores available: {mp.cpu_count()}")
             
+            # Memory monitoring context
+            if MEMORY_OPTIMIZER_AVAILABLE:
+                monitor_context = memory_monitor("Parallel day processing", threshold_gb=50.0)
+            else:
+                monitor_context = nullcontext()
+            
             try:
-                with mp.Pool(processes=num_workers) as pool:
-                    # Process all days in parallel
-                    day_results = list(pool.imap(
-                        _extract_single_day, 
-                        day_tasks
-                    ))
-                
-                # Aggregate results
-                for day_result in day_results:
-                    if day_result and day_result.get("status") == "completed":
-                        successful_days += 1
-                    else:
-                        failed_days += 1
+                with monitor_context:
+                    with mp.Pool(processes=num_workers) as pool:
+                        # Process all days in parallel with progress tracking
+                        day_results = []
                         
+                        # Use imap for better memory management
+                        for i, day_result in enumerate(pool.imap(_extract_single_day, day_tasks)):
+                            day_results.append(day_result)
+                            
+                            # Memory cleanup every 10 days
+                            if (i + 1) % 10 == 0:
+                                if MEMORY_OPTIMIZER_AVAILABLE:
+                                    force_memory_cleanup()
+                                else:
+                                    gc.collect()
+                                
+                                logger.info(f"📊 Processed {i + 1}/{len(day_tasks)} days, memory cleaned")
+                        
+                        # Aggregate results
+                        for day_result in day_results:
+                            if day_result and day_result.get("status") == "completed":
+                                successful_days += 1
+                            else:
+                                failed_days += 1
+                                
             except Exception as e:
                 logger.error(f"❌ Multiprocessing failed: {e}")
                 logger.info("🔄 Falling back to sequential processing...")
@@ -132,14 +164,30 @@ def extract_specific_points_daily_single_pass(
                     else:
                         failed_days += 1
         else:
-            # Sequential processing
+            # Sequential processing with memory optimization
             logger.info("🔄 Using sequential processing...")
-            for task in day_tasks:
-                day_result = _extract_single_day(task)
-                if day_result and day_result.get("status") == "completed":
-                    successful_days += 1
-                else:
-                    failed_days += 1
+            
+            if MEMORY_OPTIMIZER_AVAILABLE:
+                monitor_context = memory_monitor("Sequential day processing", threshold_gb=50.0)
+            else:
+                monitor_context = nullcontext()
+            
+            with monitor_context:
+                for i, task in enumerate(day_tasks):
+                    day_result = _extract_single_day(task)
+                    if day_result and day_result.get("status") == "completed":
+                        successful_days += 1
+                    else:
+                        failed_days += 1
+                    
+                    # Memory cleanup every 5 days
+                    if (i + 1) % 5 == 0:
+                        if MEMORY_OPTIMIZER_AVAILABLE:
+                            force_memory_cleanup()
+                        else:
+                            gc.collect()
+                        
+                        logger.info(f"📊 Processed {i + 1}/{len(day_tasks)} days, memory cleaned")
         
         processing_time = time.time() - start_time
         
@@ -649,13 +697,17 @@ def _extract_values_for_points(grb, point_indices, grid_lats, grid_lons):
 
 
 def _save_daily_results(date, wind_data, solar_data, wind_output_dir, solar_output_dir, compression):
-    """Save daily results to parquet files."""
+    """Save daily results to parquet files with memory optimization."""
     try:
-        # Save wind data
+        # Save wind data with memory optimization
         for var_name, var_data in wind_data.items():
             if var_data:
                 df = pd.DataFrame.from_dict(var_data, orient='index').sort_index()
                 df.index.name = 'time'
+                
+                # Optimize DataFrame memory usage
+                if MEMORY_OPTIMIZER_AVAILABLE:
+                    df = optimize_dataframe_memory(df)
                 
                 # Create variable-specific subfolder
                 var_subfolder = os.path.join(wind_output_dir, var_name)
@@ -664,12 +716,19 @@ def _save_daily_results(date, wind_data, solar_data, wind_output_dir, solar_outp
                 filename = f"{date.strftime('%Y%m%d')}.parquet"
                 filepath = os.path.join(var_subfolder, filename)
                 df.to_parquet(filepath, compression=compression)
-        
-        # Save solar data
+                
+                # Clear DataFrame from memory
+                del df
+                
+        # Save solar data with memory optimization
         for var_name, var_data in solar_data.items():
             if var_data:
                 df = pd.DataFrame.from_dict(var_data, orient='index').sort_index()
                 df.index.name = 'time'
+                
+                # Optimize DataFrame memory usage
+                if MEMORY_OPTIMIZER_AVAILABLE:
+                    df = optimize_dataframe_memory(df)
                 
                 # Create variable-specific subfolder
                 var_subfolder = os.path.join(solar_output_dir, var_name)
@@ -678,9 +737,18 @@ def _save_daily_results(date, wind_data, solar_data, wind_output_dir, solar_outp
                 filename = f"{date.strftime('%Y%m%d')}.parquet"
                 filepath = os.path.join(var_subfolder, filename)
                 df.to_parquet(filepath, compression=compression)
+                
+                # Clear DataFrame from memory
+                del df
         
         # Calculate and save derived wind speeds
         _calculate_and_save_wind_speeds(date, wind_data, wind_output_dir, compression)
+        
+        # Force memory cleanup after saving
+        if MEMORY_OPTIMIZER_AVAILABLE:
+            force_memory_cleanup()
+        else:
+            gc.collect()
                 
     except Exception as e:
         logger.error(f"Error saving daily results: {e}")
