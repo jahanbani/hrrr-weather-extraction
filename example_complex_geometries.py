@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from config_unified import HRRRConfig
-from region_extraction import extract_multiple_regions_quarterly_optimized
+from extraction_core import extract_multiple_regions_quarterly_optimized
 from geometry_support import EXAMPLE_REGIONS, check_geometry_dependencies
 
 def example_complex_geometries():
@@ -113,7 +113,7 @@ def example_complex_geometries():
     
     # Get GRIB data path
     try:
-        from prereise.gather.const import get_grib_data_path
+        from prereise_essentials import get_grib_data_path
         DATADIR = get_grib_data_path()
         
         if DATADIR is None:

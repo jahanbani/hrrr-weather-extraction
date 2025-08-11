@@ -87,13 +87,7 @@ def get_grib_data_path():
     if sys.platform.startswith("win"):
         # Windows paths to try
         windows_paths = [
-            r"data\20230101",  # Use actual available date
-            r"data\20230102",  # Use actual available date
-            r"data\20230103",  # Use actual available date
-            r"data\20230104",  # Use actual available date
-            r"data\20221231",  # Use actual available date
-            r"data\20230326",  # Use actual available date
-            r"data",
+            r"../../data/hrrr",
         ]
 
         for path in windows_paths:

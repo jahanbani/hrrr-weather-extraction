@@ -10,7 +10,7 @@ import datetime
 from typing import Dict
 
 # Import the region extraction functions
-from region_extraction import extract_region_data_quarterly, extract_multiple_regions_quarterly
+from extraction_core import extract_region_data_quarterly, extract_multiple_regions_quarterly
 from hrrr_enhanced import extract_region_data_enhanced, extract_multiple_regions_enhanced
 
 

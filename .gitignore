@@ -1,0 +1,110 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+hrrr.log
+
+# Data files
+*.csv
+*.grib2
+*.grib
+*.nc
+*.netcdf
+*.parquet
+*.h5
+*.hdf5
+*.hdf
+
+# Output directories
+extracted_data/
+output/
+results/
+temp/
+tmp/
+
+# Large directories
+weather/
+weather_backup/
+prereise/
+Herbie/
+full_grid_data_extraction/
+
+# Configuration files with sensitive data
+.env
+config_local.py
+secrets.py
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Testing
+.coverage
+.pytest_cache/
+.tox/
+htmlcov/
+
+# Documentation builds
+docs/_build/
+site/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*~
+
+# Temporary files
+*.tmp
+*.temp
+temp_*
+tmp_*
+
+# System files
+.fuse_hidden*
+.nfs*

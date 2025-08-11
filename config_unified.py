@@ -27,7 +27,6 @@ class HRRRConfig:
     # Paths
     wind_csv_path: str = "wind.csv"
     solar_csv_path: str = "solar.csv"
-    # output_base_dir: str = "./extracted_data"  # Use local directory for Windows
     output_base_dir: str = (
         "/research/alij/extracted_data"  # Use local directory for Windows
     )
@@ -39,38 +38,50 @@ class HRRRConfig:
     enable_resume: bool = True
     max_memory_gb: float = 200.0  # Use 200GB out of 256GB (leave some for OS)
 
-    # Variables
+    # Variables - using GRIB short names that match actual files
     wind_selectors: Dict[str, str] = field(
         default_factory=lambda: {
-            "UWind80": "U component of wind",  # U component of wind at 80m
-            "VWind80": "V component of wind",  # V component of wind at 80m
+            "UWind80": "u",  # U component of wind at 80m
+            "VWind80": "v",  # V component of wind at 80m
         }
     )
     # Forecast hours to process (e.g., f00, f01)
     hours_forecasted: List[str] = field(default_factory=lambda: ["0", "1"])
 
-    # Solar variables to extract
+    # Solar variables to extract - using GRIB short names
     solar_selectors: Dict[str, str] = field(
         default_factory=lambda: {
-            "UWind10": "10 metre U wind component",  # 10 metre U wind component
-            "VWind10": "10 metre V wind component",  # 10 metre V wind component
-            # Mean surface downward short-wave radiation flux
-            "rad": "Mean surface downward short-wave radiation flux",
-            "vbd": "Visible Beam Downward Solar Flux",  # Visible Beam Downward Solar Flux
-            # Visible Diffuse Downward Solar Flux
-            "vdd": "Visible Diffuse Downward Solar Flux",
-            "2tmp": "2 metre temperature",  # 2 metre temperature
+            "UWind10": "10u",  # 10 metre U wind component
+            "VWind10": "10v",  # 10 metre V wind component
+            "rad": "dswrf",  # Downward short-wave radiation flux
+            "vbd": "vbdsf",  # Visible Beam Downward Solar Flux
+            "vdd": "vddsf",  # Visible Diffuse Downward Solar Flux
+            "2tmp": "2t",  # 2 metre temperature
+            "psurf": "sp",  # Surface pressure
+            "2dpt": "2d",  # 2 metre dewpoint temperature
         }
     )
 
     # Date ranges
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
+    download_start_date: Optional[datetime] = None
+    download_end_date: Optional[datetime] = None
 
     # Constants from prereise.gather.const
     TZ: int = 8  # Timezone offset for data processing
     DATADIR: str = "/research/alij/hrrr"
-    SEARCHSTRING: str = "V[B,D]DSF|DSWRF|TMP:2 m|(?:U|V)GRD:(?:10|80) m"
+    DOWNLOADDATADIR: str = "/research/alij"
+    # SEARCHSTRING: str = ( "V[B,D]DSF|DSWRF|TMP:2 m|(?:U|V)GRD:(?:10|80) m|(?:SP|PRES:surface)")
+    SEARCHSTRING = (
+        r"V[B,D]DSF|DSWRF"  # solar: VBDSF, VDDSF, DSWRF
+        r"|TMP:2 m"  # 2 m temp
+        r"|(?:U|V)GRD:(?:10|80) m"  # winds at 10 m & 80 m
+        r"|USWRF:surface"  # optional: upward SW flux for albedo calculation
+        r"|(?:SP|PRES:surface)"  # surface pressure for density correction
+        r"|DPT:2 m"  # optional: dewpoint for humidity-corrected density
+    )
+
     SELECTORS: Dict[str, str] = field(
         default_factory=lambda: {
             "UWind80": "u",
@@ -81,6 +92,8 @@ class HRRRConfig:
             "vbd": "vbdsf",
             "vdd": "vddsf",
             "2tmp": "2t",
+            "psurf": "sp",
+            "2dpt": "2d",
         }
     )
 
@@ -115,29 +128,31 @@ class HRRRConfig:
         if self.num_workers is None:
             self.num_workers = os.cpu_count() or 40  # Use all CPUs, no artificial limit
 
-        # Set default wind selectors (using full GRIB variable names)
+        # Set default wind selectors (using GRIB short names)
         if not self.wind_selectors:
             self.wind_selectors = {
-                "UWind80": "U component of wind",
-                "VWind80": "V component of wind",
+                "UWind80": "u",
+                "VWind80": "v",
             }
 
-        # Set default solar selectors (using full GRIB variable names)
+        # Set default solar selectors (using GRIB short names)
         if not self.solar_selectors:
             self.solar_selectors = {
-                "rad": "Downward short-wave radiation flux",
-                "vbd": "Visible Beam Downward Solar Flux",
-                "vdd": "Visible Diffuse Downward Solar Flux",
-                "2tmp": "2 metre temperature",
-                "UWind10": "10 metre U wind component",
-                "VWind10": "10 metre V wind component",
+                "rad": "dswrf",
+                "vbd": "vbdsf",
+                "vdd": "vddsf",
+                "2tmp": "2t",
+                "UWind10": "10u",
+                "VWind10": "10v",
             }
 
         # Set default dates if not provided
         if self.start_date is None:
-            self.start_date = datetime(2022, 12, 31, 0, 0, 0)
+            self.start_date = datetime(2019, 1, 1, 0, 0, 0)  # Use available 2019 data
+            self.download_start_date = datetime(2018, 12, 31, 0, 0, 0)
         if self.end_date is None:
-            self.end_date = datetime(2022, 12, 31, 23, 0, 0)
+            self.end_date = datetime(2019, 1, 1, 23, 0, 0)  # Use available 2019 data
+            self.download_end_date = datetime(2025, 1, 1, 23, 0, 0)
 
         # Set default regions if not provided
         if not self.regions:
@@ -186,24 +201,6 @@ class HRRRConfig:
         """Get default region definitions with various geometry types"""
         return {
             # Traditional rectangular regions (backward compatibility)
-            "texas": {
-                "lat_min": 25.8,
-                "lat_max": 36.5,
-                "lon_min": -106.5,
-                "lon_max": -93.5,
-            },
-            "california": {
-                "lat_min": 32.5,
-                "lat_max": 42.0,
-                "lon_min": -124.5,
-                "lon_max": -114.0,
-            },
-            "florida": {
-                "lat_min": 24.5,
-                "lat_max": 31.0,
-                "lon_min": -87.5,
-                "lon_max": -80.0,
-            },
             # SPP (Southwest Power Pool) footprint
             "spp_all": {
                 "lat_min": 30.0,  # catches southernmost WEIS/RTO nodes in TX/LA
@@ -225,33 +222,6 @@ class HRRRConfig:
                     [-103.0, 36.5],  # North border
                     [-106.5, 32.0],  # West border
                     [-106.5, 25.8],  # Close polygon
-                ],
-            },
-            "houston_metro": {
-                "type": "point_buffer",
-                "lon": -95.3698,  # Houston coordinates
-                "lat": 29.7604,
-                "radius_km": 100.0,  # 100 km radius
-            },
-            "dallas_metro": {
-                "type": "point_buffer",
-                "lon": -96.7970,  # Dallas coordinates
-                "lat": 32.7767,
-                "radius_km": 75.0,  # 75 km radius
-            },
-            "california_coast": {
-                "type": "polygon",
-                "coordinates": [
-                    [-124.0, 32.5],  # San Diego area
-                    [-117.0, 32.5],  # Inland from San Diego
-                    [-117.0, 34.0],  # Los Angeles inland
-                    [-118.5, 34.5],  # Los Angeles area
-                    [-120.0, 35.5],  # Central coast
-                    [-122.0, 37.0],  # San Francisco inland
-                    [-124.0, 37.5],  # San Francisco coast
-                    [-124.5, 39.0],  # Northern coast
-                    [-124.5, 32.5],  # Back to start
-                    [-124.0, 32.5],  # Close polygon
                 ],
             },
             # File-based geometry examples (files need to exist)
@@ -439,29 +409,10 @@ def get_constants():
         "END": DEFAULT_CONFIG.end_date,
         "TZ": DEFAULT_CONFIG.TZ,
         "DATADIR": DEFAULT_CONFIG.DATADIR,
+        "DOWNLOADDATADIR": DEFAULT_CONFIG.DOWNLOADDATADIR,
         "SEARCHSTRING": DEFAULT_CONFIG.SEARCHSTRING,
         "SELECTORS": DEFAULT_CONFIG.SELECTORS,
     }
-
-
-# Backward compatibility - import existing config values
-try:
-    from config import (
-        DEFAULT_COMPRESSION,
-        DEFAULT_HOURS_FORECASTED,
-        DEFAULT_SOLAR_SELECTORS,
-        DEFAULT_WIND_SELECTORS,
-        FULL_GRID_OUTPUT_DIR,
-        SOLAR_OUTPUT_DIR,
-        WIND_OUTPUT_DIR,
-    )
-
-    # Update default config with existing values
-    DEFAULT_CONFIG.wind_selectors.update(DEFAULT_WIND_SELECTORS)
-    DEFAULT_CONFIG.solar_selectors.update(DEFAULT_SOLAR_SELECTORS)
-
-except ImportError:
-    logger.warning("Could not import existing config.py - using defaults")
 
 
 if __name__ == "__main__":

@@ -257,8 +257,8 @@ def test_regions(config: HRRRConfig):
         config.end_date = datetime(2023, 1, 1, 3, 0)  # Just 4 hours for testing
         
         # Import and run test
-        from region_extraction import extract_multiple_regions_quarterly_optimized
-        from prereise.gather.const import get_grib_data_path
+        from extraction_core import extract_multiple_regions_optimized
+        from prereise_essentials import get_grib_data_path
         
         grib_path = get_grib_data_path()
         if not grib_path:

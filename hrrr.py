@@ -41,47 +41,47 @@ warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*fs.*")
 def extract_specific_locations():
     """Extract HRRR data for specific wind and solar locations."""
 
-    print("🚀 SPECIFIC LOCATIONS EXTRACTION")
+    print("SPECIFIC LOCATIONS EXTRACTION")
     print("=" * 50)
 
     # Load location data
-    print("📁 Loading location data from CSV files...")
+    print("Loading location data from CSV files...")
 
     try:
         wind_df = pd.read_csv("wind.csv")
-        print(f"✅ Loaded {len(wind_df)} wind locations from wind.csv")
+        print(f"Loaded {len(wind_df)} wind locations from wind.csv")
     except FileNotFoundError:
-        print("❌ wind.csv not found!")
+        print("wind.csv not found!")
         return None
     except Exception as e:
-        print(f"❌ Error loading wind.csv: {e}")
+        print(f"Error loading wind.csv: {e}")
         return None
 
     try:
         solar_df = pd.read_csv("solar.csv")
-        print(f"✅ Loaded {len(solar_df)} solar locations from solar.csv")
+        print(f"Loaded {len(solar_df)} solar locations from solar.csv")
     except FileNotFoundError:
-        print("❌ solar.csv not found!")
+        print("solar.csv not found!")
         return None
     except Exception as e:
-        print(f"❌ Error loading solar.csv: {e}")
+        print(f"Error loading solar.csv: {e}")
         return None
 
     # Check required columns
     required_columns = ["pid", "lat", "lon"]
     for col in required_columns:
         if col not in wind_df.columns:
-            print(f"❌ Missing column '{col}' in wind.csv")
+            print(f"Missing column '{col}' in wind.csv")
             return None
         if col not in solar_df.columns:
-            print(f"❌ Missing column '{col}' in solar.csv")
+            print(f"Missing column '{col}' in solar.csv")
             return None
 
     # Select only required columns
     wind_locations = wind_df[["pid", "lat", "lon"]].copy()
     solar_locations = solar_df[["pid", "lat", "lon"]].copy()
 
-    print(f"📊 Separated locations:")
+    print(f"Separated locations:")
     print(f"   Wind locations: {len(wind_locations)}")
     print(f"   Solar locations: {len(solar_locations)}")
 
@@ -110,15 +110,15 @@ def extract_specific_locations():
     # END = datetime.datetime(2023, 1, 1, 2, 0, 0)  # End: January 1, 2023, 02:00
 
     # Get the GRIB data path
-    from prereise.gather.const import get_grib_data_path
+    from prereise_essentials import get_grib_data_path
 
     grib_path = get_grib_data_path()
 
     if grib_path is None:
-        print("❌ No GRIB data path found!")
+        print("No GRIB data path found!")
         return None
 
-    print(f"✅ Using GRIB path: {grib_path}")
+    print(f"Using GRIB path: {grib_path}")
 
     # Use default selectors from config
     wind_selectors = DEFAULT_WIND_SELECTORS
@@ -139,7 +139,7 @@ def extract_specific_locations():
     #     "VWind10": "10 metre V wind component",
     # }
 
-    print("📋 Extraction Parameters:")
+    print("Extraction Parameters:")
     print(f"   Date range: {START.date()} to {END.date()}")
     print(f"   Wind locations: {len(wind_locations)}")
     print(f"   Wind variables: {list(wind_selectors.keys())}")
@@ -155,9 +155,9 @@ def extract_specific_locations():
     # Combine all selectors for single-pass reading
     all_selectors = {**wind_selectors, **solar_selectors}
 
-    print("🚀 OPTIMIZED SINGLE-PASS EXTRACTION")
+    print("OPTIMIZED SINGLE-PASS EXTRACTION")
     print("=" * 50)
-    print("📊 Using single-pass GRIB reading for maximum efficiency")
+    print("Using single-pass GRIB reading for maximum efficiency")
     print("   - Each GRIB file read only ONCE")
     print("   - All variables extracted simultaneously")
     print("   - ~50% faster than previous approach")
@@ -173,10 +173,10 @@ def extract_specific_locations():
 
         # For testing, let's use a more targeted approach
         # Only process the specific hours we want (0 and 1) instead of all 24 hours
-        print("🎯 Using targeted extraction for 2 hours only")
+        print("Using targeted extraction for 2 hours only")
 
         # Extract location-specific data using OPTIMIZED POINT EXTRACTION (much faster!)
-        from extract_specific_points_parallel import extract_specific_points_parallel
+        from extraction_core import extract_specific_points_parallel
 
         extraction_result = extract_specific_points_parallel(
             wind_csv_path="wind.csv",
@@ -193,18 +193,18 @@ def extract_specific_locations():
             max_file_groups=None,  # Process ALL file groups (no limit)
         )
 
-        print("✅ Single-pass extraction completed!")
+        print("Single-pass extraction completed!")
         results["extraction"] = extraction_result
 
     except Exception as e:
-        print(f"❌ Error during single-pass extraction: {e}")
+        print(f"Error during single-pass extraction: {e}")
         import traceback
 
         traceback.print_exc()
         results["extraction"] = None
 
     # Show summary
-    print("\n📁 EXTRACTION SUMMARY")
+    print("\nEXTRACTION SUMMARY")
     print("=" * 40)
 
     if os.path.exists(WIND_OUTPUT_DIR):
@@ -239,7 +239,7 @@ def extract_full_grid():
     print("=" * 50)
 
     # Get the GRIB data path
-    from prereise.gather.const import SELECTORS, get_grib_data_path
+    from prereise_essentials import get_grib_data_path
 
     grib_path = get_grib_data_path()
 

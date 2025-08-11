@@ -91,11 +91,14 @@ def extract_specific_locations_enhanced(
         solar_count = count_csv_rows(config.solar_csv_path)
 
         logger.info("✅ Wind locations: %d from %s", wind_count, config.wind_csv_path)
-        logger.info("✅ Solar locations: %d from %s", solar_count, config.solar_csv_path)
+        logger.info(
+            "✅ Solar locations: %d from %s", solar_count, config.solar_csv_path
+        )
 
         # Get the GRIB data path (use provided path if available)
         if grib_path is None:
-            from prereise.gather.const import get_grib_data_path
+            from prereise_essentials import get_grib_data_path
+
             grib_path = get_grib_data_path()
 
         if grib_path is None:
@@ -129,7 +132,7 @@ def extract_specific_locations_enhanced(
         points_extracted_metric = 0
 
         # Import our new optimized single-pass extraction function
-        from extract_specific_points_daily_single_pass import (
+        from extraction_core import (
             extract_specific_points_daily_single_pass,
         )
 
@@ -192,7 +195,11 @@ def extract_specific_locations_enhanced(
 
         if os.path.exists(output_dirs["wind"]):
             with os.scandir(output_dirs["wind"]) as it:
-                wind_files = [entry.name for entry in it if entry.is_file() and entry.name.endswith(".parquet")]
+                wind_files = [
+                    entry.name
+                    for entry in it
+                    if entry.is_file() and entry.name.endswith(".parquet")
+                ]
             logger.info(
                 "🌪️  Wind files: %d files in %s/",
                 len(wind_files),
@@ -201,7 +208,11 @@ def extract_specific_locations_enhanced(
 
         if os.path.exists(output_dirs["solar"]):
             with os.scandir(output_dirs["solar"]) as it:
-                solar_files = [entry.name for entry in it if entry.is_file() and entry.name.endswith(".parquet")]
+                solar_files = [
+                    entry.name
+                    for entry in it
+                    if entry.is_file() and entry.name.endswith(".parquet")
+                ]
             logger.info(
                 "☀️  Solar files: %d files in %s/",
                 len(solar_files),
@@ -268,7 +279,7 @@ def extract_full_grid_enhanced(
 
     try:
         # Get the GRIB data path; build selector mapping using GRIB full names
-        from prereise.gather.const import get_grib_data_path
+        from prereise_essentials import get_grib_data_path
 
         if grib_path is None:
             grib_path = get_grib_data_path()
@@ -313,7 +324,7 @@ def extract_full_grid_enhanced(
         points_extracted_metric = 0
 
         # Use DAY-BY-DAY AGGRESSIVE optimization for maximum performance
-        from prereise.gather.winddata.hrrr.calculations import (
+        from full_grid_extraction import (
             extract_full_grid_day_by_day,
         )
 
@@ -453,7 +464,8 @@ def extract_region_data_enhanced(
 
         # Get the GRIB data path
         if grib_path is None:
-            from prereise.gather.const import get_grib_data_path
+            from prereise_essentials import get_grib_data_path
+
             grib_path = get_grib_data_path()
 
         if grib_path is None:
@@ -485,7 +497,7 @@ def extract_region_data_enhanced(
         points_extracted_metric = 0
 
         # Import the region extraction function
-        from region_extraction import extract_region_data_quarterly
+        from extraction_core import extract_region_data_quarterly
 
         logger.info("🚀 REGION EXTRACTION WITH QUARTERLY RESOLUTION")
         logger.info("=" * 50)
@@ -507,7 +519,7 @@ def extract_region_data_enhanced(
                 START=START,
                 END=END,
                 DATADIR=grib_path,
-                 DEFAULT_HOURS_FORECASTED=config.hours_forecasted,  # e.g., f00 and f01
+                DEFAULT_HOURS_FORECASTED=config.hours_forecasted,  # e.g., f00 and f01
                 wind_selectors=config.wind_selectors,
                 solar_selectors=config.solar_selectors,
                 output_dir=output_dir,
@@ -544,7 +556,11 @@ def extract_region_data_enhanced(
 
         if os.path.exists(output_dir):
             with os.scandir(output_dir) as it:
-                parquet_files = [entry.name for entry in it if entry.is_file() and entry.name.endswith(".parquet")]
+                parquet_files = [
+                    entry.name
+                    for entry in it
+                    if entry.is_file() and entry.name.endswith(".parquet")
+                ]
             logger.info(f"📊 Region files: {len(parquet_files)} files in {output_dir}/")
 
             # Show file sizes
@@ -658,7 +674,8 @@ def extract_multiple_regions_enhanced(
 
         # Get the GRIB data path
         if grib_path is None:
-            from prereise.gather.const import get_grib_data_path
+            from prereise_essentials import get_grib_data_path
+
             grib_path = get_grib_data_path()
 
         if grib_path is None:
@@ -690,7 +707,7 @@ def extract_multiple_regions_enhanced(
         points_extracted_metric = 0
 
         # Import the multi-region extraction function
-        from region_extraction import extract_multiple_regions_quarterly
+        from extraction_core import extract_multiple_regions_quarterly
 
         logger.info("🚀 MULTI-REGION EXTRACTION WITH QUARTERLY RESOLUTION")
         logger.info("=" * 50)
@@ -712,7 +729,7 @@ def extract_multiple_regions_enhanced(
                 START=START,
                 END=END,
                 DATADIR=grib_path,
-                 DEFAULT_HOURS_FORECASTED=config.hours_forecasted,  # e.g., f00 and f01
+                DEFAULT_HOURS_FORECASTED=config.hours_forecasted,  # e.g., f00 and f01
                 wind_selectors=config.wind_selectors,
                 solar_selectors=config.solar_selectors,
                 base_output_dir=base_output_dir,
@@ -759,7 +776,11 @@ def extract_multiple_regions_enhanced(
             for region_dir in region_dirs:
                 region_path = os.path.join(base_output_dir, region_dir)
                 with os.scandir(region_path) as it:
-                    parquet_files = [entry.name for entry in it if entry.is_file() and entry.name.endswith(".parquet")]
+                    parquet_files = [
+                        entry.name
+                        for entry in it
+                        if entry.is_file() and entry.name.endswith(".parquet")
+                    ]
                 total_files += len(parquet_files)
 
                 region_size_mb = 0
@@ -833,7 +854,7 @@ def test_region_extraction_enhanced(
     try:
         # Get active regions from config (defaults to SPP only)
         test_regions = config.get_regions()  # Uses active_regions setting
-        
+
         # If no active regions found, fallback to any available
         if not test_regions:
             logger.warning("No active regions found, using first available region")
@@ -866,7 +887,7 @@ def test_region_extraction_enhanced(
         os.makedirs("./test_regions_extracted", exist_ok=True)
 
         # Get the GRIB data path
-        from prereise.gather.const import get_grib_data_path
+        from prereise_essentials import get_grib_data_path
 
         grib_path = get_grib_data_path()
 
@@ -899,7 +920,7 @@ def test_region_extraction_enhanced(
         points_extracted_metric = 0
 
         # Import the multi-region extraction function
-        from region_extraction import extract_multiple_regions_quarterly_optimized
+        from extraction_core import extract_multiple_regions_quarterly_optimized
 
         logger.info(
             "🚀 TESTING OPTIMIZED MULTI-REGION EXTRACTION WITH QUARTERLY RESOLUTION"
@@ -1062,14 +1083,16 @@ def main_enhanced():
 
     # Resolve GRIB path once and pass to called functions
     try:
-        from prereise.gather.const import get_grib_data_path
+        from prereise_essentials import get_grib_data_path
+
         resolved_grib_path = get_grib_data_path()
     except Exception:
         resolved_grib_path = None
 
     # Option 2: Specific Locations Extraction (wind.csv + solar.csv)
     # Uncomment the line below to run specific locations extraction
-    # result = extract_specific_locations_enhanced(config, grib_path=resolved_grib_path)
+    print("running for specific data points --- NOT full")
+    result = extract_specific_locations_enhanced(config, grib_path=resolved_grib_path)
 
     # Option 3: Region Extraction (NEW - for testing quarterly data)
     # Uncomment the line below to run region extraction test helper

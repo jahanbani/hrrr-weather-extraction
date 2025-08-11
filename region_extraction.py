@@ -27,7 +27,7 @@ from prereise.gather.winddata.hrrr.calculations import (
     formatted_filename,
     add_wind_speed_calculations,
 )
-from prereise.gather.winddata.hrrr.helpers import formatted_filename
+from prereise_essentials import formatted_filename
 
 # Import geometry support
 try:
