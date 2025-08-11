@@ -718,3 +718,5 @@ Trying to import the above resulted in these errors:
 2025-08-11 12:23:48,820 - __main__ - INFO -    Avg CPU: 2.7%
 2025-08-11 12:23:48,820 - __main__ - ERROR - 
 ❌ Enhanced extraction failed!
+2025-08-11 12:46:33,346 - herbie.fast - INFO - Number of Herbie objects: 105301
+2025-08-11 12:46:33,709 - herbie.fast - INFO - 🧵 Working on 105312 tasks with 200 threads.
