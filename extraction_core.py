@@ -115,11 +115,12 @@ def extract_specific_points_daily_single_pass(
         
         logger.info(f"📅 Prepared {len(day_tasks)} days for processing")
         
-        # Use advanced parallel processing with memory optimization
+        # Use ThreadPoolExecutor for I/O-bound operations (MUCH faster than multiprocessing)
         if use_parallel and num_workers > 1:
-            logger.info(f"🚀 Using {num_workers} parallel processes for day processing...")
+            logger.info(f"🚀 Using {num_workers} parallel threads for day processing...")
             logger.info(f"   Expected speedup: ~{num_workers}x faster than sequential")
             logger.info(f"   CPU cores available: {mp.cpu_count()}")
+            logger.info(f"   Using ThreadPoolExecutor for I/O-bound GRIB operations")
             
             # Memory monitoring context
             if MEMORY_OPTIMIZER_AVAILABLE:
@@ -129,22 +130,38 @@ def extract_specific_points_daily_single_pass(
             
             try:
                 with monitor_context:
-                    with mp.Pool(processes=num_workers) as pool:
+                    with ThreadPoolExecutor(max_workers=num_workers) as executor:
                         # Process all days in parallel with progress tracking
                         day_results = []
                         
-                        # Use imap for better memory management
-                        for i, day_result in enumerate(pool.imap(_extract_single_day, day_tasks)):
-                            day_results.append(day_result)
-                            
-                            # Memory cleanup every 10 days
-                            if (i + 1) % 10 == 0:
-                                if MEMORY_OPTIMIZER_AVAILABLE:
-                                    force_memory_cleanup()
-                                else:
-                                    gc.collect()
+                        # Use submit + as_completed for better progress tracking
+                        future_to_task = {
+                            executor.submit(_extract_single_day, task): task 
+                            for task in day_tasks
+                        }
+                        
+                        completed_count = 0
+                        for future in as_completed(future_to_task):
+                            task = future_to_task[future]
+                            try:
+                                day_result = future.result()
+                                day_results.append(day_result)
                                 
-                                logger.info(f"📊 Processed {i + 1}/{len(day_tasks)} days, memory cleaned")
+                                completed_count += 1
+                                logger.info(f"📊 Completed day {task[0].date()}: {day_result['status']}")
+                                
+                                # Memory cleanup every 5 days
+                                if completed_count % 5 == 0:
+                                    if MEMORY_OPTIMIZER_AVAILABLE:
+                                        force_memory_cleanup()
+                                    else:
+                                        gc.collect()
+                                    
+                                    logger.info(f"📊 Processed {completed_count}/{len(day_tasks)} days, memory cleaned")
+                                    
+                            except Exception as e:
+                                logger.error(f"❌ Day {task[0].date()} failed: {e}")
+                                day_results.append({"status": "failed", "error": str(e)})
                         
                         # Aggregate results
                         for day_result in day_results:
@@ -154,7 +171,7 @@ def extract_specific_points_daily_single_pass(
                                 failed_days += 1
                                 
             except Exception as e:
-                logger.error(f"❌ Multiprocessing failed: {e}")
+                logger.error(f"❌ ThreadPoolExecutor failed: {e}")
                 logger.info("🔄 Falling back to sequential processing...")
                 
                 # Fallback to sequential processing
@@ -509,6 +526,23 @@ def _extract_single_day(args):
     try:
         logger.info(f"📊 Processing day: {date.date()}")
         
+        # Extract grid coordinates (only once per day)
+        grid_lats, grid_lons = _extract_grid_coordinates(date, datadir)
+        if grid_lats is None or grid_lons is None:
+            logger.error(f"❌ Could not extract grid coordinates for {date.date()}")
+            return {
+                "date": date.date(),
+                "status": "failed",
+                "error": "Grid coordinates extraction failed",
+                "files_processed": 0
+            }
+        
+        # Find closest grid points for each location
+        wind_indices = _find_closest_grid_points(wind_locations, grid_lats, grid_lons)
+        solar_indices = _find_closest_grid_points(solar_locations, grid_lats, grid_lons)
+        
+        logger.info(f"📊 Found {len(wind_indices)} wind grid points and {len(solar_indices)} solar grid points")
+        
         # Find GRIB files for this day
         grib_files = _find_grib_files_for_day(date, datadir, hours_forecasted)
         
@@ -517,8 +551,7 @@ def _extract_single_day(args):
             return {
                 "date": date.date(),
                 "status": "no_files",
-                "wind_data": {},
-                "solar_data": {},
+                "error": "No GRIB files found",
                 "files_processed": 0
             }
         
@@ -526,17 +559,10 @@ def _extract_single_day(args):
         day_result = _process_grib_files_for_day(
             date, datadir, hours_forecasted, 
             wind_indices, solar_indices, 
-            grid_lats, grid_lons, wind_points, solar_points,
+            grid_lats, grid_lons, wind_locations, solar_locations,
             wind_selectors, solar_selectors, 
             wind_output_dir, solar_output_dir, compression
         )
-        
-        if day_result.get("status") == "completed":
-            successful_days += 1
-            logger.info(f"✅ Day {date.date()} completed successfully")
-        else:
-            failed_days += 1
-            logger.error(f"❌ Day {date.date()} failed: {day_result.get('reason', 'Unknown error')}")
         
         return {
             "date": date.date(),
@@ -551,8 +577,6 @@ def _extract_single_day(args):
             "date": date.date(),
             "status": "failed",
             "error": str(e),
-            "wind_data": {},
-            "solar_data": {},
             "files_processed": 0
         }
 
