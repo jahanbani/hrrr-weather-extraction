@@ -103,6 +103,13 @@ def extract_specific_points_daily_single_pass(
     logger.info(f"   CPU workers: {num_workers}")
     logger.info(f"   Batch size: {batch_size}")
     logger.info(f"   Expected speedup: ~{num_workers}x")
+    # Align NumExpr threads with our executor if not set by user
+    try:
+        import os as _os
+        if "NUMEXPR_MAX_THREADS" not in _os.environ:
+            _os.environ["NUMEXPR_MAX_THREADS"] = str(max(1, int(num_workers)))
+    except Exception:
+        pass
     
     # Process in batches for memory efficiency (inclusive day count)
     total_days = (END - START).days + 1
@@ -114,6 +121,7 @@ def extract_specific_points_daily_single_pass(
         # Process each day
         current_date = START
         day_tasks = []
+        total_file_groups_processed = 0
         
         # Prepare tasks for multiprocessing
         while current_date <= END:
@@ -164,6 +172,11 @@ def extract_specific_points_daily_single_pass(
                             try:
                                 day_result = future.result()
                                 day_results.append(day_result)
+                                # Accumulate processed file groups for throughput metrics
+                                try:
+                                    total_file_groups_processed += int(day_result.get("file_groups_processed", 0))
+                                except Exception:
+                                    pass
                                 
                                 completed_count += 1
                                 logger.info(f"📊 Completed day {task[0].date()}: {day_result['status']}")
@@ -199,6 +212,10 @@ def extract_specific_points_daily_single_pass(
                         successful_days += 1
                     else:
                         failed_days += 1
+                    try:
+                        total_file_groups_processed += int(day_result.get("file_groups_processed", 0))
+                    except Exception:
+                        pass
         else:
             # Sequential processing with memory optimization
             logger.info("🔄 Using sequential processing...")
@@ -215,6 +232,10 @@ def extract_specific_points_daily_single_pass(
                         successful_days += 1
                     else:
                         failed_days += 1
+                    try:
+                        total_file_groups_processed += int(day_result.get("file_groups_processed", 0))
+                    except Exception:
+                        pass
                     
                     # Memory cleanup every 5 days
                     if (i + 1) % 5 == 0:
@@ -235,10 +256,7 @@ def extract_specific_points_daily_single_pass(
             "wind_locations": len(wind_locations),
             "solar_locations": len(solar_locations),
             "processing_time_seconds": processing_time,
-            # Note: files_processed aggregated by caller if needed
-            "files_processed": sum(
-                dr.get("file_groups_processed", 0) for dr in locals().get("day_results", [])
-            )
+            "files_processed": int(total_file_groups_processed),
         }
         
     except Exception as e:
@@ -1025,7 +1043,10 @@ def _estimate_grid_points(region_bounds):
 
 
 def _optimize_workers_for_36cpu_256gb():
-    """Optimize worker count for 36 CPU, 256 GB system."""
+    """Optimize worker count using available CPUs and memory.
+
+    Uses all CPUs minus one when resources permit; otherwise scales down conservatively.
+    """
     try:
         # Get system info
         total_cpus = mp.cpu_count()
@@ -1035,30 +1056,22 @@ def _optimize_workers_for_36cpu_256gb():
         logger.info(f"   Total CPUs: {total_cpus}")
         logger.info(f"   Available Memory: {available_memory_gb:.1f} GB")
         
-        # ThreadPoolExecutor optimization for 36 CPU, 256 GB system
-        # ThreadPoolExecutor is much more efficient for I/O-bound GRIB operations
-        if total_cpus >= 36 and available_memory_gb >= 200:
-            # High-performance system: use 36 workers (ThreadPoolExecutor can handle this efficiently)
-            optimal_workers = 36
-            logger.info(f"🎯 High-performance system detected: Using {optimal_workers} ThreadPoolExecutor workers")
-        elif total_cpus >= 24 and available_memory_gb >= 150:
-            # Medium-performance system: use 24 workers
-            optimal_workers = 24
-            logger.info(f"🎯 Medium-performance system detected: Using {optimal_workers} ThreadPoolExecutor workers")
-        elif total_cpus >= 16 and available_memory_gb >= 100:
-            # Standard system: use 16 workers
-            optimal_workers = 16
-            logger.info(f"🎯 Standard system detected: Using {optimal_workers} ThreadPoolExecutor workers")
+        # Prefer all CPUs minus one for I/O-bound workload when memory is ample
+        if available_memory_gb >= 100 and total_cpus >= 4:
+            optimal_workers = max(1, total_cpus - 1)
+            logger.info(f"🎯 Using all CPUs minus one: {optimal_workers} workers (total CPUs: {total_cpus})")
+        elif total_cpus >= 2:
+            optimal_workers = max(1, total_cpus // 2)
+            logger.info(f"🎯 Limited memory: using half CPUs => {optimal_workers} workers")
         else:
-            # Conservative default: use 8 workers
-            optimal_workers = 8
-            logger.info(f"🎯 Conservative settings: Using {optimal_workers} ThreadPoolExecutor workers")
+            optimal_workers = 1
+            logger.info("🎯 Single CPU detected: using 1 worker")
         
         # Memory safety check
-        memory_per_worker_gb = available_memory_gb / optimal_workers
-        if memory_per_worker_gb < 2.0:
+        memory_per_worker_gb = available_memory_gb / max(optimal_workers, 1)
+        if memory_per_worker_gb < 1.0:
             logger.warning(f"⚠️  Low memory per worker ({memory_per_worker_gb:.1f} GB), reducing workers")
-            optimal_workers = max(4, int(available_memory_gb / 2.0))
+            optimal_workers = max(1, int(available_memory_gb))
         
         logger.info(f"✅ Final optimization: {optimal_workers} workers")
         logger.info(f"   Memory per worker: {available_memory_gb/optimal_workers:.1f} GB")
