@@ -194,28 +194,22 @@ def extract_specific_locations_enhanced(
         logger.info("=" * 40)
 
         if os.path.exists(output_dirs["wind"]):
-            with os.scandir(output_dirs["wind"]) as it:
-                wind_files = [
-                    entry.name
-                    for entry in it
-                    if entry.is_file() and entry.name.endswith(".parquet")
-                ]
+            wind_count = 0
+            for root, _, files in os.walk(output_dirs["wind"]):
+                wind_count += sum(1 for f in files if f.endswith(".parquet"))
             logger.info(
                 "🌪️  Wind files: %d files in %s/",
-                len(wind_files),
+                wind_count,
                 output_dirs["wind"],
             )
 
         if os.path.exists(output_dirs["solar"]):
-            with os.scandir(output_dirs["solar"]) as it:
-                solar_files = [
-                    entry.name
-                    for entry in it
-                    if entry.is_file() and entry.name.endswith(".parquet")
-                ]
+            solar_count = 0
+            for root, _, files in os.walk(output_dirs["solar"]):
+                solar_count += sum(1 for f in files if f.endswith(".parquet"))
             logger.info(
                 "☀️  Solar files: %d files in %s/",
-                len(solar_files),
+                solar_count,
                 output_dirs["solar"],
             )
 
@@ -1097,9 +1091,6 @@ def main_enhanced():
     # Option 3: Region Extraction (NEW - for testing quarterly data)
     # Uncomment the line below to run region extraction test helper
     # result = test_region_extraction_enhanced(config)
-
-    # No default run selected
-    result = None
 
     # ============================================================================
     # END OF CHOICES

@@ -104,8 +104,8 @@ def extract_specific_points_daily_single_pass(
     logger.info(f"   Batch size: {batch_size}")
     logger.info(f"   Expected speedup: ~{num_workers}x")
     
-    # Process in batches for memory efficiency
-    total_days = (END - START).days
+    # Process in batches for memory efficiency (inclusive day count)
+    total_days = (END - START).days + 1
     successful_days = 0
     failed_days = 0
     start_time = time.time()
@@ -235,7 +235,10 @@ def extract_specific_points_daily_single_pass(
             "wind_locations": len(wind_locations),
             "solar_locations": len(solar_locations),
             "processing_time_seconds": processing_time,
-            "files_processed": total_days * 24  # 24 hours per day
+            # Note: files_processed aggregated by caller if needed
+            "files_processed": sum(
+                dr.get("file_groups_processed", 0) for dr in locals().get("day_results", [])
+            )
         }
         
     except Exception as e:
