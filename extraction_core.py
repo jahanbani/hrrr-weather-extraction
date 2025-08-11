@@ -18,6 +18,7 @@ import time
 import warnings
 from collections import defaultdict
 import gc
+import re # Added for advanced file grouping
 
 # Import our advanced memory optimizer
 try:
@@ -521,24 +522,27 @@ def _extract_single_day(args):
                 "files_processed": 0
             }
         
-        # Process GRIB files for this day
-        wind_data, solar_data = _process_grib_files_for_day(
-            grib_files, wind_locations, solar_locations, 
-            wind_selectors, solar_selectors
-        )
-        
-        # Save results for this day
-        _save_daily_results(
-            date, wind_data, solar_data, 
+        # Process GRIB files for this day using advanced optimizations
+        day_result = _process_grib_files_for_day(
+            date, datadir, hours_forecasted, 
+            wind_indices, solar_indices, 
+            grid_lats, grid_lons, wind_points, solar_points,
+            wind_selectors, solar_selectors, 
             wind_output_dir, solar_output_dir, compression
         )
         
+        if day_result.get("status") == "completed":
+            successful_days += 1
+            logger.info(f"✅ Day {date.date()} completed successfully")
+        else:
+            failed_days += 1
+            logger.error(f"❌ Day {date.date()} failed: {day_result.get('reason', 'Unknown error')}")
+        
         return {
             "date": date.date(),
-            "status": "completed",
-            "wind_data": wind_data,
-            "solar_data": solar_data,
-            "files_processed": len(grib_files)
+            "status": day_result.get("status", "failed"),
+            "files_processed": day_result.get("file_groups_processed", 0),
+            "reason": day_result.get("reason", "")
         }
         
     except Exception as e:
@@ -554,10 +558,8 @@ def _extract_single_day(args):
 
 
 def _find_grib_files_for_day(date, datadir, hours_forecasted):
-    """Find GRIB files for a specific day and forecast hours."""
+    """Find GRIB files for a specific day and forecast hours with advanced grouping."""
     grib_files = []
-    
-    # Create date folder path (YYYYMMDD format)
     date_folder = date.strftime("%Y%m%d")
     date_path = os.path.join(datadir, date_folder)
     
@@ -565,90 +567,185 @@ def _find_grib_files_for_day(date, datadir, hours_forecasted):
         logger.warning(f"⚠️  Date folder not found: {date_path}")
         return []
     
-    # Look for GRIB files in the date folder
     try:
-        # Find all .grib2 files in the date folder
         for filename in os.listdir(date_path):
             if filename.endswith('.grib2'):
                 filepath = os.path.join(date_path, filename)
                 grib_files.append(filepath)
         
         logger.info(f"📁 Found {len(grib_files)} GRIB files for {date.date()}")
-        
-        # Log some example filenames for debugging
         if grib_files:
             sample_files = grib_files[:3]
             logger.info(f"📋 Sample files: {[os.path.basename(f) for f in sample_files]}")
+            
+        # Group files by time for efficient processing
+        file_groups = _group_grib_files_by_time(grib_files)
+        logger.info(f"📊 Grouped into {len(file_groups)} time groups for efficient processing")
+        
+        return file_groups
         
     except Exception as e:
         logger.error(f"❌ Error scanning date folder {date_path}: {e}")
-    
-    return grib_files
+        return []
 
 
-def _process_grib_files_for_day(grib_files, wind_locations, solar_locations, 
-                               wind_selectors, solar_selectors):
-    """Process GRIB files for a single day to extract wind and solar data."""
-    wind_data = defaultdict(dict)
-    solar_data = defaultdict(dict)
+def _group_grib_files_by_time(files):
+    """Group GRIB files by time for efficient processing (from backup analysis)."""
+    file_groups = {}
     
-    # Get grid coordinates from first GRIB file
-    grid_lats, grid_lons = _extract_grid_coordinates(grib_files[0])
+    for file_path in files:
+        # Extract hour and forecast type from HRRR naming convention
+        filename = os.path.basename(file_path)
+        match = re.search(r'hrrr\.t(\d{2})z\.wrfsubhf(\d{2})\.grib2', filename)
+        if not match:
+            continue
+            
+        hour_str, forecast_str = match.groups()
+        fxx = f"f{forecast_str}"
+        
+        # Extract date from directory path
+        dir_path = os.path.dirname(file_path)
+        date_match = re.search(r'(\d{8})', dir_path)
+        if date_match:
+            date_str = date_match.group(1)
+            key = f"{date_str}_{hour_str}"
+        else:
+            key = f"hour_{hour_str}"
+            
+        if key not in file_groups:
+            file_groups[key] = {}
+        file_groups[key][fxx] = file_path
     
-    # Find closest grid points for wind and solar locations
-    wind_indices = _find_closest_grid_points(wind_locations, grid_lats, grid_lons)
-    solar_indices = _find_closest_grid_points(solar_locations, grid_lats, grid_lons)
-    
-    # Process each GRIB file
-    for grib_file in grib_files:
-        try:
-            with pygrib.open(grib_file) as grbs:
-                for grb in grbs:
-                    # Extract timestamp
-                    timestamp = pd.Timestamp(
-                        year=grb.year, month=grb.month, day=grb.day,
-                        hour=grb.hour, minute=grb.minute
+    return file_groups
+
+
+def _process_grib_files_for_day(date, datadir, hours_forecasted, wind_indices, solar_indices, 
+                               grid_lats, grid_lons, wind_points, solar_points, 
+                               wind_selectors, solar_selectors, wind_output_dir, 
+                               solar_output_dir, compression):
+    """Process GRIB files for a single day using advanced optimizations."""
+    try:
+        # Find and group GRIB files
+        file_groups = _find_grib_files_for_day(date, datadir, hours_forecasted)
+        
+        if not file_groups:
+            logger.warning(f"⚠️  No GRIB files found for {date.date()}")
+            return {"status": "failed", "reason": "No GRIB files found"}
+        
+        logger.info(f"📊 Processing {len(file_groups)} file groups for {date.date()}")
+        
+        # Initialize data storage
+        wind_data = defaultdict(dict)
+        solar_data = defaultdict(dict)
+        
+        # Process each file group (each group contains f00 and f01 files for the same hour)
+        for group_key, group_files in file_groups.items():
+            try:
+                # Process f00 files (top of the hour)
+                if 'f00' in group_files:
+                    _process_single_grib_file(
+                        group_files['f00'], wind_indices, solar_indices, 
+                        grid_lats, grid_lons, wind_points, solar_points,
+                        wind_selectors, solar_selectors, wind_data, solar_data
+                    )
+                
+                # Process f01 files (quarter-hourly data: 15, 30, 45 minutes)
+                if 'f01' in group_files:
+                    _process_single_grib_file(
+                        group_files['f01'], wind_indices, solar_indices, 
+                        grid_lats, grid_lons, wind_points, solar_points,
+                        wind_selectors, solar_selectors, wind_data, solar_data
                     )
                     
-                    # Process wind variables
-                    if len(wind_indices) > 0:
-                        for var_key, short_name in wind_selectors.items():
-                            if grb.shortName == short_name:
-                                # Level check for wind variables
-                                if "80" in var_key and grb.level == 80:
-                                    wind_values = _extract_values_for_points(grb, wind_indices, grid_lats, grid_lons)
-                                    if wind_values is not None:
-                                        wind_columns = wind_locations.pid.astype(str).tolist()
-                                        wind_data[var_key][timestamp] = dict(zip(wind_columns, wind_values))
-                                    break
-                                elif "10" in var_key and grb.level == 10:
-                                    wind_values = _extract_values_for_points(grb, wind_indices, grid_lats, grid_lons)
-                                    if wind_values is not None:
-                                        wind_columns = wind_locations.pid.astype(str).tolist()
-                                        wind_data[var_key][timestamp] = dict(zip(wind_columns, wind_values))
-                                    break
-                    
-                    # Process solar variables
-                    if len(solar_indices) > 0:
-                        for var_key, short_name in solar_selectors.items():
-                            if grb.shortName == short_name:
-                                solar_values = _extract_values_for_points(grb, solar_indices, grid_lats, grid_lons)
-                                if solar_values is not None:
-                                    solar_columns = solar_locations.pid.astype(str).tolist()
-                                    solar_data[var_key][timestamp] = dict(zip(solar_columns, solar_values))
+            except Exception as e:
+                logger.error(f"❌ Error processing file group {group_key}: {e}")
+                continue
+        
+        # Save results immediately to prevent memory accumulation
+        _save_daily_results(date, wind_data, solar_data, wind_output_dir, solar_output_dir, compression)
+        
+        # Clear data from memory
+        del wind_data, solar_data
+        
+        return {"status": "completed", "file_groups_processed": len(file_groups)}
+        
+    except Exception as e:
+        logger.error(f"❌ Error processing day {date.date()}: {e}")
+        return {"status": "failed", "reason": str(e)}
+
+
+def _process_single_grib_file(file_path, wind_indices, solar_indices, grid_lats, grid_lons,
+                             wind_points, solar_points, wind_selectors, solar_selectors,
+                             wind_data, solar_data):
+    """Process a single GRIB file extracting all variables in one pass."""
+    try:
+        with pygrib.open(file_path) as grbs:
+            # Read all GRIB messages once for maximum efficiency
+            grb_messages = list(grbs)
+            
+            # Process each timestamp
+            for grb in grb_messages:
+                timestamp = pd.Timestamp(
+                    year=grb.year, month=grb.month, day=grb.day,
+                    hour=grb.hour, minute=grb.minute
+                )
+                
+                # Check if this is a wind variable and we have wind locations
+                if len(wind_indices) > 0:
+                    for var_key, short_name in wind_selectors.items():
+                        if grb.shortName == short_name:
+                            # Level check for wind variables
+                            if "80" in var_key and grb.level == 80:
+                                wind_values = _extract_values_for_points(grb, wind_indices, grid_lats, grid_lons)
+                                if wind_values is not None:
+                                    wind_columns = wind_points.pid.astype(str).tolist()
+                                    wind_data[var_key][timestamp] = dict(zip(wind_columns, wind_values))
                                 break
-                                
-        except Exception as e:
-            logger.error(f"Error processing GRIB file {grib_file}: {e}")
-            continue
-    
-    return wind_data, solar_data
+                            elif "10" in var_key and grb.level == 10:
+                                wind_values = _extract_values_for_points(grb, wind_indices, grid_lats, grid_lons)
+                                if wind_values is not None:
+                                    wind_columns = wind_points.pid.astype(str).tolist()
+                                    wind_data[var_key][timestamp] = dict(zip(wind_columns, wind_values))
+                                break
+                
+                # Check if this is a solar variable and we have solar locations
+                if len(solar_indices) > 0:
+                    for var_key, short_name in solar_selectors.items():
+                        if grb.shortName == short_name:
+                            solar_values = _extract_values_for_points(grb, solar_indices, grid_lats, grid_lons)
+                            if solar_values is not None:
+                                solar_columns = solar_points.pid.astype(str).tolist()
+                                solar_data[var_key][timestamp] = dict(zip(solar_columns, solar_values))
+                            break
+                            
+    except Exception as e:
+        logger.error(f"❌ Error processing GRIB file {file_path}: {e}")
 
 
-def _extract_grid_coordinates(grib_file):
+def _extract_grid_coordinates(date, datadir):
     """Extract grid coordinates from a GRIB file."""
     try:
-        with pygrib.open(grib_file) as grbs:
+        # Create date folder path (YYYYMMDD format)
+        date_folder = date.strftime("%Y%m%d")
+        date_path = os.path.join(datadir, date_folder)
+        
+        if not os.path.exists(date_path):
+            logger.warning(f"⚠️  Date folder not found: {date_path}")
+            return None, None
+        
+        # Look for GRIB files in the date folder
+        grib_files = []
+        for filename in os.listdir(date_path):
+            if filename.endswith('.grib2'):
+                filepath = os.path.join(date_path, filename)
+                grib_files.append(filepath)
+        
+        if not grib_files:
+            logger.warning(f"⚠️  No GRIB files found in {date_path}")
+            return None, None
+        
+        # Get the first GRIB file to extract grid info
+        with pygrib.open(grib_files[0]) as grbs:
             # Get the first message to extract grid info
             grb = grbs[1]  # First message (index 1)
             lats, lons = grb.latlons()
@@ -840,23 +937,24 @@ def _optimize_workers_for_36cpu_256gb():
         logger.info(f"   Total CPUs: {total_cpus}")
         logger.info(f"   Available Memory: {available_memory_gb:.1f} GB")
         
-        # Conservative optimization for 36 CPU, 256 GB system
+        # ThreadPoolExecutor optimization for 36 CPU, 256 GB system
+        # ThreadPoolExecutor is much more efficient for I/O-bound GRIB operations
         if total_cpus >= 36 and available_memory_gb >= 200:
-            # High-performance system: use 32 workers (leave 4 for system)
-            optimal_workers = 32
-            logger.info(f"🎯 High-performance system detected: Using {optimal_workers} workers")
+            # High-performance system: use 36 workers (ThreadPoolExecutor can handle this efficiently)
+            optimal_workers = 36
+            logger.info(f"🎯 High-performance system detected: Using {optimal_workers} ThreadPoolExecutor workers")
         elif total_cpus >= 24 and available_memory_gb >= 150:
-            # Medium-performance system: use 20 workers
-            optimal_workers = 20
-            logger.info(f"🎯 Medium-performance system detected: Using {optimal_workers} workers")
+            # Medium-performance system: use 24 workers
+            optimal_workers = 24
+            logger.info(f"🎯 Medium-performance system detected: Using {optimal_workers} ThreadPoolExecutor workers")
         elif total_cpus >= 16 and available_memory_gb >= 100:
-            # Standard system: use 12 workers
-            optimal_workers = 12
-            logger.info(f"🎯 Standard system detected: Using {optimal_workers} workers")
+            # Standard system: use 16 workers
+            optimal_workers = 16
+            logger.info(f"🎯 Standard system detected: Using {optimal_workers} ThreadPoolExecutor workers")
         else:
             # Conservative default: use 8 workers
             optimal_workers = 8
-            logger.info(f"🎯 Conservative settings: Using {optimal_workers} workers")
+            logger.info(f"🎯 Conservative settings: Using {optimal_workers} ThreadPoolExecutor workers")
         
         # Memory safety check
         memory_per_worker_gb = available_memory_gb / optimal_workers
