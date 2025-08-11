@@ -13,6 +13,7 @@ import PySAM.ResourceTools as RT
 from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Bing, Photon
 from herbie.fast import FastHerbie
+import requests
 
 # from prereise.gather.solardata.nsrdb.nrel_api import ipdb
 from prereise.gather.winddata.hrrr.calculations import (
@@ -39,6 +40,80 @@ def process_plant(inx, dfsd, pv_dict):
         print(f"Output of {inx} is greater than one")
 
     return df_power
+
+
+def _fallback_elevation_calls(batch, elevations, successful_calls):
+    """Helper function to handle fallback elevation calls for a batch"""
+    for lat, lon in batch:
+        try:
+            elevation = get_elevation_open(lat, lon)
+            elevations[(lat, lon)] = elevation
+            if elevation is not None:
+                successful_calls += 1
+        except Exception as e2:
+            print(f"Error getting elevation for {lat}, {lon}: {e2}")
+            elevations[(lat, lon)] = None
+    return successful_calls
+
+
+def get_elevation_open(lat, lon):
+    url = f"https://api.open-elevation.com/api/v1/lookup?locations={lat},{lon}"
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            results = response.json().get("results", [])
+            return results[0]["elevation"] if results else None
+        else:
+            print(f"API returned status code {response.status_code} for {lat}, {lon}")
+            return None
+    except Exception as e:
+        print(f"Error getting elevation for {lat}, {lon}: {e}")
+        return None
+
+
+def get_elevations_batch(lat_lon_pairs, batch_size=100):
+    """Get elevations for multiple lat/lon pairs in batches"""
+    elevations = {}
+    successful_calls = 0
+    total_calls = len(lat_lon_pairs)
+
+    print(
+        f"Getting elevations for {total_calls} locations in batches of {batch_size}..."
+    )
+
+    for i in range(0, len(lat_lon_pairs), batch_size):
+        batch = lat_lon_pairs[i : i + batch_size]
+        locations = "|".join([f"{lat},{lon}" for lat, lon in batch])
+        url = f"https://api.open-elevation.com/api/v1/lookup?locations={locations}"
+
+        try:
+            response = requests.get(url, timeout=30)
+            if response.status_code == 200:
+                results = response.json().get("results", [])
+
+                for j, result in enumerate(results):
+                    idx = i + j
+                    if idx < len(lat_lon_pairs):
+                        elevation = result.get("elevation")
+                        elevations[lat_lon_pairs[idx]] = elevation
+                        if elevation is not None:
+                            successful_calls += 1
+            else:
+                print(f"API returned status code {response.status_code} for batch {i}")
+                successful_calls = _fallback_elevation_calls(
+                    batch, elevations, successful_calls
+                )
+
+        except Exception as e:
+            print(f"Error getting elevations for batch {i}: {e}")
+            successful_calls = _fallback_elevation_calls(
+                batch, elevations, successful_calls
+            )
+
+    print(
+        f"Elevation retrieval complete: {successful_calls}/{total_calls} successful calls"
+    )
+    return elevations
 
 
 def prepare_calculate_solar_power(

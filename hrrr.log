@@ -193,3 +193,371 @@
 2025-08-11 00:39:37,850 - __main__ - INFO -    Avg CPU: 1.7%
 2025-08-11 00:39:37,850 - __main__ - ERROR - 
 ❌ Enhanced extraction failed!
+2025-08-11 10:57:38,393 - numexpr.utils - INFO - Note: NumExpr detected 36 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 16.
+2025-08-11 10:57:38,393 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 10:57:38,504 - __main__ - INFO - 🚀 ENHANCED HRRR Data Extraction
+2025-08-11 10:57:38,504 - __main__ - INFO - ==================================================
+2025-08-11 10:57:38,504 - __main__ - INFO - Choose extraction type by commenting/uncommenting the lines below:
+2025-08-11 10:57:38,505 - __main__ - INFO - 
+2025-08-11 10:57:38,505 - __main__ - INFO - ✅ Configuration loaded and validated
+2025-08-11 11:01:17,163 - __main__ - INFO - 🚀 ENHANCED SPECIFIC LOCATIONS EXTRACTION
+2025-08-11 11:01:17,163 - __main__ - INFO - ==================================================
+2025-08-11 11:01:17,169 - utils_enhanced - INFO - System Info:
+2025-08-11 11:01:17,174 - utils_enhanced - INFO -   CPU cores: 36
+2025-08-11 11:01:17,174 - utils_enhanced - INFO -   Memory: 251.4 GB total
+2025-08-11 11:01:17,174 - utils_enhanced - INFO -   Memory available: 243.9 GB
+2025-08-11 11:01:17,174 - utils_enhanced - INFO -   Platform: posix
+2025-08-11 11:01:17,174 - __main__ - INFO - 🔍 Validating inputs...
+2025-08-11 11:01:17,174 - utils_enhanced - INFO - 🔍 Validating input files...
+2025-08-11 11:01:17,199 - utils_enhanced - INFO - ✅ Validated wind.csv: 49 rows, 18 columns
+2025-08-11 11:01:17,216 - utils_enhanced - INFO - ✅ Validated solar.csv: 638 rows, 21 columns
+2025-08-11 11:01:17,216 - utils_enhanced - INFO - ✅ All input files validated successfully
+2025-08-11 11:01:17,216 - __main__ - INFO - 💾 Checking disk space...
+2025-08-11 11:01:22,122 - utils_enhanced - INFO - ✅ Sufficient disk space: 18670.3 GB available
+2025-08-11 11:01:22,122 - __main__ - INFO - 📁 Creating output directories...
+2025-08-11 11:01:25,137 - utils_enhanced - INFO - ✅ Created output directory: /research/alij/extracted_data/wind
+2025-08-11 11:01:26,951 - utils_enhanced - INFO - ✅ Created output directory: /research/alij/extracted_data/solar
+2025-08-11 11:01:29,225 - utils_enhanced - INFO - ✅ Created output directory: /research/alij/extracted_data/full_grid
+2025-08-11 11:01:29,225 - __main__ - INFO - 📊 Counting location rows in CSVs (no full load)...
+2025-08-11 11:01:29,225 - __main__ - INFO - ✅ Wind locations: 49 from wind.csv
+2025-08-11 11:01:29,234 - __main__ - INFO - ✅ Solar locations: 638 from solar.csv
+2025-08-11 11:01:29,234 - __main__ - INFO - 🔍 Validating data directory...
+2025-08-11 11:40:39,202 - numexpr.utils - INFO - Note: NumExpr detected 48 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 16.
+2025-08-11 11:40:39,202 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 11:40:39,336 - __main__ - INFO - 🚀 ENHANCED HRRR Data Extraction
+2025-08-11 11:40:39,336 - __main__ - INFO - ==================================================
+2025-08-11 11:40:39,336 - __main__ - INFO - Choose extraction type by commenting/uncommenting the lines below:
+2025-08-11 11:40:39,336 - __main__ - INFO - 
+2025-08-11 11:40:39,336 - __main__ - INFO - ✅ Configuration loaded and validated
+2025-08-11 11:40:39,610 - __main__ - INFO - 🚀 ENHANCED SPECIFIC LOCATIONS EXTRACTION
+2025-08-11 11:40:39,610 - __main__ - INFO - ==================================================
+2025-08-11 11:40:39,611 - utils_enhanced - WARNING - psutil not available - system info not logged
+2025-08-11 11:40:39,611 - __main__ - INFO - 🔍 Validating inputs...
+2025-08-11 11:40:39,611 - utils_enhanced - INFO - 🔍 Validating input files...
+2025-08-11 11:40:39,617 - utils_enhanced - INFO - ✅ Validated wind.csv: 49 rows, 18 columns
+2025-08-11 11:40:39,623 - utils_enhanced - INFO - ✅ Validated solar.csv: 638 rows, 21 columns
+2025-08-11 11:40:39,623 - utils_enhanced - INFO - ✅ All input files validated successfully
+2025-08-11 11:40:39,623 - __main__ - INFO - 💾 Checking disk space...
+2025-08-11 11:40:39,684 - utils_enhanced - INFO - ✅ Sufficient disk space: 18615.9 GB available
+2025-08-11 11:40:39,684 - __main__ - INFO - 📁 Creating output directories...
+2025-08-11 11:40:39,744 - utils_enhanced - INFO - ✅ Created output directory: /research/alij/extracted_data/wind
+2025-08-11 11:40:39,745 - utils_enhanced - INFO - ✅ Created output directory: /research/alij/extracted_data/solar
+2025-08-11 11:40:39,746 - utils_enhanced - INFO - ✅ Created output directory: /research/alij/extracted_data/full_grid
+2025-08-11 11:40:39,746 - __main__ - INFO - 📊 Counting location rows in CSVs (no full load)...
+2025-08-11 11:40:39,747 - __main__ - INFO - ✅ Wind locations: 49 from wind.csv
+2025-08-11 11:40:39,747 - __main__ - INFO - ✅ Solar locations: 638 from solar.csv
+2025-08-11 11:40:39,747 - __main__ - INFO - 🔍 Validating data directory...
+2025-08-11 11:41:05,290 - utils_enhanced - INFO - ✅ Found 31390 GRIB files in /research/alij/hrrr
+2025-08-11 11:41:05,294 - __main__ - INFO - ✅ Using GRIB path: /research/alij/hrrr
+2025-08-11 11:41:05,294 - __main__ - INFO - 📋 Extraction Parameters:
+2025-08-11 11:41:05,294 - __main__ - INFO -    Date range: 2019-01-01 to 2019-01-01
+2025-08-11 11:41:05,294 - __main__ - INFO -    Wind locations: 49
+2025-08-11 11:41:05,295 - __main__ - INFO -    Wind variables: ['UWind80', 'VWind80']
+2025-08-11 11:41:05,295 - __main__ - INFO -    Solar locations: 638
+2025-08-11 11:41:05,295 - __main__ - INFO -    Solar variables: ['UWind10', 'VWind10', 'rad', 'vbd', 'vdd', '2tmp', 'psurf', '2dpt']
+2025-08-11 11:41:05,295 - __main__ - INFO -    Workers: 48
+2025-08-11 11:41:05,295 - __main__ - INFO -    Chunk size: 50000
+2025-08-11 11:41:05,295 - utils_enhanced - INFO - Performance monitoring started
+2025-08-11 11:41:05,375 - extraction_core - WARNING - ⚠️  Memory optimizer not available - using basic memory management
+2025-08-11 11:41:05,375 - __main__ - INFO - 🚀 OPTIMIZED SINGLE-PASS EXTRACTION
+2025-08-11 11:41:05,375 - __main__ - INFO - ==================================================
+2025-08-11 11:41:05,376 - __main__ - INFO - 📊 Using single-pass GRIB reading for maximum efficiency
+2025-08-11 11:41:05,376 - __main__ - INFO -    - Each GRIB file read only ONCE
+2025-08-11 11:41:05,376 - __main__ - INFO -    - All variables extracted simultaneously
+2025-08-11 11:41:05,376 - __main__ - INFO -    - Quarter-hourly data (00, 15, 30, 45 minutes)
+2025-08-11 11:41:05,376 - __main__ - INFO -    - ~50% faster than previous approach
+2025-08-11 11:41:05,376 - __main__ - INFO - 🎯 Using our new optimized extraction function
+2025-08-11 11:41:05,376 - extraction_core - INFO - 🚀 Starting single-pass extraction for specific points
+2025-08-11 11:41:05,387 - extraction_core - INFO - 📊 Wind locations: 49
+2025-08-11 11:41:05,387 - extraction_core - INFO - 📊 Solar locations: 638
+2025-08-11 11:41:05,388 - extraction_core - INFO - 🚀 Optimized for 36 CPU, 256 GB system:
+2025-08-11 11:41:05,388 - extraction_core - INFO -    CPU workers: 48
+2025-08-11 11:41:05,388 - extraction_core - INFO -    Batch size: 36
+2025-08-11 11:41:05,388 - extraction_core - INFO -    Expected speedup: ~48x
+2025-08-11 11:41:05,388 - extraction_core - INFO - 📅 Prepared 1 days for processing
+2025-08-11 11:41:05,388 - extraction_core - INFO - 🚀 Using 48 parallel processes for day processing...
+2025-08-11 11:41:05,388 - extraction_core - INFO -    Expected speedup: ~48x faster than sequential
+2025-08-11 11:41:05,389 - extraction_core - INFO -    CPU cores available: 48
+2025-08-11 11:41:05,519 - extraction_core - INFO - 📊 Processing day: 2019-01-01
+2025-08-11 11:41:05,818 - extraction_core - INFO - 📁 Found 48 GRIB files for 2019-01-01
+2025-08-11 11:41:05,818 - extraction_core - INFO - 📋 Sample files: ['hrrr.t09z.wrfsubhf01.grib2', 'hrrr.t23z.wrfsubhf01.grib2', 'hrrr.t17z.wrfsubhf01.grib2']
+2025-08-11 11:46:00,270 - extraction_core - ERROR - Error saving daily results: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-08-11 11:46:00,620 - __main__ - INFO - ✅ Day-by-day extraction completed!
+2025-08-11 11:46:00,621 - utils_enhanced - INFO - Operation completed: 295.3s, 0.00 files/s, 2.33 points/s
+2025-08-11 11:46:00,621 - __main__ - INFO - 
+📁 EXTRACTION SUMMARY
+2025-08-11 11:46:00,621 - __main__ - INFO - ========================================
+2025-08-11 11:46:00,838 - __main__ - INFO - 🌪️  Wind files: 0 files in /research/alij/extracted_data/wind/
+2025-08-11 11:46:00,842 - __main__ - INFO - ☀️  Solar files: 0 files in /research/alij/extracted_data/solar/
+2025-08-11 11:46:00,842 - __main__ - INFO - 📊 Processing Summary:
+2025-08-11 11:46:00,842 - __main__ - INFO -    Total days: 0
+2025-08-11 11:46:00,843 - __main__ - INFO -    Successful days: 1
+2025-08-11 11:46:00,843 - __main__ - INFO -    Failed days: 0
+2025-08-11 11:46:00,843 - __main__ - INFO -    Processing time: 0.1 hours
+2025-08-11 11:46:00,843 - __main__ - INFO -    Wind locations: 49
+2025-08-11 11:46:00,843 - __main__ - INFO -    Solar locations: 638
+2025-08-11 11:46:00,843 - __main__ - INFO - 📈 Performance Summary:
+2025-08-11 11:46:00,843 - __main__ - INFO -    Total duration: 4.9m
+2025-08-11 11:46:00,843 - __main__ - INFO -    Avg throughput: 0.00 files/s
+2025-08-11 11:46:00,843 - __main__ - INFO -    Peak memory: 0.0 GB
+2025-08-11 11:46:00,843 - __main__ - INFO -    Avg CPU: 0.0%
+2025-08-11 11:46:00,843 - __main__ - ERROR - 
+❌ Enhanced extraction failed!
+2025-08-11 11:49:29,810 - numexpr.utils - INFO - Note: NumExpr detected 48 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 16.
+2025-08-11 11:49:29,810 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 11:49:29,945 - __main__ - INFO - 🚀 ENHANCED HRRR Data Extraction
+2025-08-11 11:49:29,945 - __main__ - INFO - ==================================================
+2025-08-11 11:49:29,945 - __main__ - INFO - Choose extraction type by commenting/uncommenting the lines below:
+2025-08-11 11:49:29,945 - __main__ - INFO - 
+2025-08-11 11:49:29,945 - __main__ - INFO - ✅ Configuration loaded and validated
+2025-08-11 11:49:30,356 - __main__ - INFO - 🚀 ENHANCED SPECIFIC LOCATIONS EXTRACTION
+2025-08-11 11:49:30,357 - __main__ - INFO - ==================================================
+2025-08-11 11:49:30,357 - utils_enhanced - WARNING - psutil not available - system info not logged
+2025-08-11 11:49:30,357 - __main__ - INFO - 🔍 Validating inputs...
+2025-08-11 11:49:30,357 - utils_enhanced - INFO - 🔍 Validating input files...
+2025-08-11 11:49:30,363 - utils_enhanced - INFO - ✅ Validated wind.csv: 49 rows, 18 columns
+2025-08-11 11:49:30,368 - utils_enhanced - INFO - ✅ Validated solar.csv: 638 rows, 21 columns
+2025-08-11 11:49:30,368 - utils_enhanced - INFO - ✅ All input files validated successfully
+2025-08-11 11:49:30,368 - __main__ - INFO - 💾 Checking disk space...
+2025-08-11 11:49:30,368 - utils_enhanced - INFO - ✅ Sufficient disk space: 18603.8 GB available
+2025-08-11 11:49:30,368 - __main__ - INFO - 📁 Creating output directories...
+2025-08-11 11:49:30,369 - utils_enhanced - INFO - ✅ Created output directory: /research/alij/extracted_data/wind
+2025-08-11 11:49:30,370 - utils_enhanced - INFO - ✅ Created output directory: /research/alij/extracted_data/solar
+2025-08-11 11:49:30,370 - utils_enhanced - INFO - ✅ Created output directory: /research/alij/extracted_data/full_grid
+2025-08-11 11:49:30,370 - __main__ - INFO - 📊 Counting location rows in CSVs (no full load)...
+2025-08-11 11:49:30,371 - __main__ - INFO - ✅ Wind locations: 49 from wind.csv
+2025-08-11 11:49:30,371 - __main__ - INFO - ✅ Solar locations: 638 from solar.csv
+2025-08-11 11:49:30,371 - __main__ - INFO - 🔍 Validating data directory...
+2025-08-11 11:49:34,691 - numexpr.utils - INFO - Note: NumExpr detected 48 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 16.
+2025-08-11 11:49:34,692 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 11:49:34,827 - __main__ - INFO - 🚀 ENHANCED HRRR Data Extraction
+2025-08-11 11:49:34,827 - __main__ - INFO - ==================================================
+2025-08-11 11:49:34,827 - __main__ - INFO - Choose extraction type by commenting/uncommenting the lines below:
+2025-08-11 11:49:34,827 - __main__ - INFO - 
+2025-08-11 11:49:34,827 - __main__ - INFO - ✅ Configuration loaded and validated
+2025-08-11 11:49:34,872 - __main__ - INFO - 🚀 ENHANCED SPECIFIC LOCATIONS EXTRACTION
+2025-08-11 11:49:34,872 - __main__ - INFO - ==================================================
+2025-08-11 11:49:34,872 - utils_enhanced - WARNING - psutil not available - system info not logged
+2025-08-11 11:49:34,872 - __main__ - INFO - 🔍 Validating inputs...
+2025-08-11 11:49:34,872 - utils_enhanced - INFO - 🔍 Validating input files...
+2025-08-11 11:49:34,877 - utils_enhanced - INFO - ✅ Validated wind.csv: 49 rows, 18 columns
+2025-08-11 11:49:34,881 - utils_enhanced - INFO - ✅ Validated solar.csv: 638 rows, 21 columns
+2025-08-11 11:49:34,881 - utils_enhanced - INFO - ✅ All input files validated successfully
+2025-08-11 11:49:34,881 - __main__ - INFO - 💾 Checking disk space...
+2025-08-11 11:49:35,171 - utils_enhanced - INFO - ✅ Sufficient disk space: 18603.7 GB available
+2025-08-11 11:49:35,171 - __main__ - INFO - 📁 Creating output directories...
+2025-08-11 11:49:35,172 - utils_enhanced - INFO - ✅ Created output directory: /research/alij/extracted_data/wind
+2025-08-11 11:49:35,172 - utils_enhanced - INFO - ✅ Created output directory: /research/alij/extracted_data/solar
+2025-08-11 11:49:35,173 - utils_enhanced - INFO - ✅ Created output directory: /research/alij/extracted_data/full_grid
+2025-08-11 11:49:35,173 - __main__ - INFO - 📊 Counting location rows in CSVs (no full load)...
+2025-08-11 11:49:35,173 - __main__ - INFO - ✅ Wind locations: 49 from wind.csv
+2025-08-11 11:49:35,173 - __main__ - INFO - ✅ Solar locations: 638 from solar.csv
+2025-08-11 11:49:35,173 - __main__ - INFO - 🔍 Validating data directory...
+2025-08-11 11:49:39,174 - utils_enhanced - INFO - ✅ Found 31664 GRIB files in /research/alij/hrrr
+2025-08-11 11:49:39,175 - __main__ - INFO - ✅ Using GRIB path: /research/alij/hrrr
+2025-08-11 11:49:39,175 - __main__ - INFO - 📋 Extraction Parameters:
+2025-08-11 11:49:39,175 - __main__ - INFO -    Date range: 2019-01-01 to 2019-01-01
+2025-08-11 11:49:39,175 - __main__ - INFO -    Wind locations: 49
+2025-08-11 11:49:39,175 - __main__ - INFO -    Wind variables: ['UWind80', 'VWind80']
+2025-08-11 11:49:39,175 - __main__ - INFO -    Solar locations: 638
+2025-08-11 11:49:39,175 - __main__ - INFO -    Solar variables: ['UWind10', 'VWind10', 'rad', 'vbd', 'vdd', '2tmp', 'psurf', '2dpt']
+2025-08-11 11:49:39,175 - __main__ - INFO -    Workers: 48
+2025-08-11 11:49:39,175 - __main__ - INFO -    Chunk size: 50000
+2025-08-11 11:49:39,175 - utils_enhanced - INFO - Performance monitoring started
+2025-08-11 11:49:39,234 - extraction_core - WARNING - ⚠️  Memory optimizer not available - using basic memory management
+2025-08-11 11:49:39,234 - __main__ - INFO - 🚀 OPTIMIZED SINGLE-PASS EXTRACTION
+2025-08-11 11:49:39,234 - __main__ - INFO - ==================================================
+2025-08-11 11:49:39,235 - __main__ - INFO - 📊 Using single-pass GRIB reading for maximum efficiency
+2025-08-11 11:49:39,235 - __main__ - INFO -    - Each GRIB file read only ONCE
+2025-08-11 11:49:39,235 - __main__ - INFO -    - All variables extracted simultaneously
+2025-08-11 11:49:39,235 - __main__ - INFO -    - Quarter-hourly data (00, 15, 30, 45 minutes)
+2025-08-11 11:49:39,235 - __main__ - INFO -    - ~50% faster than previous approach
+2025-08-11 11:49:39,235 - __main__ - INFO - 🎯 Using our new optimized extraction function
+2025-08-11 11:49:39,235 - extraction_core - INFO - 🚀 Starting single-pass extraction for specific points
+2025-08-11 11:49:39,243 - extraction_core - INFO - 📊 Wind locations: 49
+2025-08-11 11:49:39,243 - extraction_core - INFO - 📊 Solar locations: 638
+2025-08-11 11:49:39,244 - extraction_core - INFO - 🚀 Optimized for 36 CPU, 256 GB system:
+2025-08-11 11:49:39,244 - extraction_core - INFO -    CPU workers: 48
+2025-08-11 11:49:39,245 - extraction_core - INFO -    Batch size: 36
+2025-08-11 11:49:39,245 - extraction_core - INFO -    Expected speedup: ~48x
+2025-08-11 11:49:39,245 - extraction_core - INFO - 📅 Prepared 1 days for processing
+2025-08-11 11:49:39,245 - extraction_core - INFO - 🚀 Using 48 parallel processes for day processing...
+2025-08-11 11:49:39,245 - extraction_core - INFO -    Expected speedup: ~48x faster than sequential
+2025-08-11 11:49:39,245 - extraction_core - INFO -    CPU cores available: 48
+2025-08-11 11:49:39,362 - extraction_core - INFO - 📊 Processing day: 2019-01-01
+2025-08-11 11:49:39,700 - extraction_core - INFO - 📁 Found 48 GRIB files for 2019-01-01
+2025-08-11 11:49:39,700 - extraction_core - INFO - 📋 Sample files: ['hrrr.t09z.wrfsubhf01.grib2', 'hrrr.t23z.wrfsubhf01.grib2', 'hrrr.t17z.wrfsubhf01.grib2']
+2025-08-11 11:49:39,701 - extraction_core - INFO - 📊 Grouped into 24 time groups for efficient processing
+2025-08-11 11:49:39,701 - extraction_core - ERROR - ❌ Error processing day 2019-01-01: name 'wind_indices' is not defined
+2025-08-11 11:49:39,720 - __main__ - INFO - ✅ Day-by-day extraction completed!
+2025-08-11 11:49:39,721 - utils_enhanced - INFO - Operation completed: 0.5s, 0.00 files/s, 1260.06 points/s
+2025-08-11 11:49:39,721 - __main__ - INFO - 
+📁 EXTRACTION SUMMARY
+2025-08-11 11:49:39,721 - __main__ - INFO - ========================================
+2025-08-11 11:49:39,784 - __main__ - INFO - 🌪️  Wind files: 0 files in /research/alij/extracted_data/wind/
+2025-08-11 11:49:39,785 - __main__ - INFO - ☀️  Solar files: 0 files in /research/alij/extracted_data/solar/
+2025-08-11 11:49:39,785 - __main__ - INFO - 📊 Processing Summary:
+2025-08-11 11:49:39,785 - __main__ - INFO -    Total days: 0
+2025-08-11 11:49:39,785 - __main__ - INFO -    Successful days: 0
+2025-08-11 11:49:39,785 - __main__ - INFO -    Failed days: 1
+2025-08-11 11:49:39,785 - __main__ - INFO -    Processing time: 0.0 hours
+2025-08-11 11:49:39,785 - __main__ - INFO -    Wind locations: 49
+2025-08-11 11:49:39,785 - __main__ - INFO -    Solar locations: 638
+2025-08-11 11:49:39,785 - __main__ - INFO - 📈 Performance Summary:
+2025-08-11 11:49:39,785 - __main__ - INFO -    Total duration: 0.5s
+2025-08-11 11:49:39,785 - __main__ - INFO -    Avg throughput: 0.00 files/s
+2025-08-11 11:49:39,785 - __main__ - INFO -    Peak memory: 0.0 GB
+2025-08-11 11:49:39,785 - __main__ - INFO -    Avg CPU: 0.0%
+2025-08-11 11:49:39,786 - __main__ - ERROR - 
+❌ Enhanced extraction failed!
+2025-08-11 11:59:49,506 - herbie.fast - INFO - 🧵 Working on 105312 tasks with 100 threads.
+2025-08-11 12:02:54,987 - numexpr.utils - INFO - Note: NumExpr detected 36 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 16.
+2025-08-11 12:02:54,988 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 12:02:55,097 - __main__ - INFO - 🚀 ENHANCED HRRR Data Extraction
+2025-08-11 12:02:55,098 - __main__ - INFO - ==================================================
+2025-08-11 12:02:55,098 - __main__ - INFO - Choose extraction type by commenting/uncommenting the lines below:
+2025-08-11 12:02:55,098 - __main__ - INFO - 
+2025-08-11 12:02:55,098 - __main__ - INFO - ✅ Configuration loaded and validated
+2025-08-11 12:02:55,102 - __main__ - INFO - 🚀 ENHANCED SPECIFIC LOCATIONS EXTRACTION
+2025-08-11 12:02:55,102 - __main__ - INFO - ==================================================
+2025-08-11 12:02:55,108 - utils_enhanced - INFO - System Info:
+2025-08-11 12:02:55,109 - utils_enhanced - INFO -   CPU cores: 36
+2025-08-11 12:02:55,109 - utils_enhanced - INFO -   Memory: 251.4 GB total
+2025-08-11 12:02:55,109 - utils_enhanced - INFO -   Memory available: 246.0 GB
+2025-08-11 12:02:55,109 - utils_enhanced - INFO -   Platform: posix
+2025-08-11 12:02:55,110 - __main__ - INFO - 🔍 Validating inputs...
+2025-08-11 12:02:55,110 - utils_enhanced - INFO - 🔍 Validating input files...
+2025-08-11 12:02:55,113 - utils_enhanced - INFO - ✅ Validated wind.csv: 49 rows, 18 columns
+2025-08-11 12:02:55,116 - utils_enhanced - INFO - ✅ Validated solar.csv: 638 rows, 21 columns
+2025-08-11 12:02:55,117 - utils_enhanced - INFO - ✅ All input files validated successfully
+2025-08-11 12:02:55,117 - __main__ - INFO - 💾 Checking disk space...
+2025-08-11 12:02:55,117 - utils_enhanced - INFO - ✅ Sufficient disk space: 18586.6 GB available
+2025-08-11 12:02:55,117 - __main__ - INFO - 📁 Creating output directories...
+2025-08-11 12:02:55,118 - utils_enhanced - INFO - ✅ Created output directory: /research/alij/extracted_data/wind
+2025-08-11 12:02:55,118 - utils_enhanced - INFO - ✅ Created output directory: /research/alij/extracted_data/solar
+2025-08-11 12:02:55,118 - utils_enhanced - INFO - ✅ Created output directory: /research/alij/extracted_data/full_grid
+2025-08-11 12:02:55,118 - __main__ - INFO - 📊 Counting location rows in CSVs (no full load)...
+2025-08-11 12:02:55,119 - __main__ - INFO - ✅ Wind locations: 49 from wind.csv
+2025-08-11 12:02:55,119 - __main__ - INFO - ✅ Solar locations: 638 from solar.csv
+2025-08-11 12:02:55,119 - __main__ - INFO - 🔍 Validating data directory...
+2025-08-11 12:02:55,509 - utils_enhanced - INFO - ✅ Found 32093 GRIB files in /research/alij/hrrr
+2025-08-11 12:02:55,510 - __main__ - INFO - ✅ Using GRIB path: /research/alij/hrrr
+2025-08-11 12:02:55,510 - __main__ - INFO - 📋 Extraction Parameters:
+2025-08-11 12:02:55,510 - __main__ - INFO -    Date range: 2019-01-01 to 2019-01-01
+2025-08-11 12:02:55,510 - __main__ - INFO -    Wind locations: 49
+2025-08-11 12:02:55,511 - __main__ - INFO -    Wind variables: ['UWind80', 'VWind80']
+2025-08-11 12:02:55,511 - __main__ - INFO -    Solar locations: 638
+2025-08-11 12:02:55,511 - __main__ - INFO -    Solar variables: ['UWind10', 'VWind10', 'rad', 'vbd', 'vdd', '2tmp', 'psurf', '2dpt']
+2025-08-11 12:02:55,511 - __main__ - INFO -    Workers: 36
+2025-08-11 12:02:55,511 - __main__ - INFO -    Chunk size: 50000
+2025-08-11 12:02:55,512 - utils_enhanced - INFO - Performance monitoring started
+2025-08-11 12:02:55,551 - memory_optimizer - INFO - 🔍 Memory Optimizer initialized:
+2025-08-11 12:02:55,551 - memory_optimizer - INFO -    Total system memory: 251.4 GB
+2025-08-11 12:02:55,551 - memory_optimizer - INFO -    Available memory: 246.0 GB
+2025-08-11 12:02:55,551 - memory_optimizer - INFO -    Max allowed usage: 200.0 GB
+2025-08-11 12:02:55,551 - memory_optimizer - INFO -    Warning threshold: 80%
+2025-08-11 12:02:55,552 - __main__ - INFO - 🚀 OPTIMIZED SINGLE-PASS EXTRACTION
+2025-08-11 12:02:55,552 - __main__ - INFO - ==================================================
+2025-08-11 12:02:55,552 - __main__ - INFO - 📊 Using single-pass GRIB reading for maximum efficiency
+2025-08-11 12:02:55,552 - __main__ - INFO -    - Each GRIB file read only ONCE
+2025-08-11 12:02:55,553 - __main__ - INFO -    - All variables extracted simultaneously
+2025-08-11 12:02:55,553 - __main__ - INFO -    - Quarter-hourly data (00, 15, 30, 45 minutes)
+2025-08-11 12:02:55,553 - __main__ - INFO -    - ~50% faster than previous approach
+2025-08-11 12:02:55,553 - __main__ - INFO - 🎯 Using our new optimized extraction function
+2025-08-11 12:02:55,554 - extraction_core - INFO - 🚀 Starting single-pass extraction for specific points
+2025-08-11 12:02:55,558 - extraction_core - INFO - 📊 Wind locations: 49
+2025-08-11 12:02:55,558 - extraction_core - INFO - 📊 Solar locations: 638
+2025-08-11 12:02:55,559 - extraction_core - INFO - 🚀 Optimized for 36 CPU, 256 GB system:
+2025-08-11 12:02:55,559 - extraction_core - INFO -    CPU workers: 36
+2025-08-11 12:02:55,559 - extraction_core - INFO -    Batch size: 36
+2025-08-11 12:02:55,560 - extraction_core - INFO -    Expected speedup: ~36x
+2025-08-11 12:02:55,560 - extraction_core - INFO - 📅 Prepared 1 days for processing
+2025-08-11 12:02:55,560 - extraction_core - INFO - 🚀 Using 36 parallel threads for day processing...
+2025-08-11 12:02:55,560 - extraction_core - INFO -    Expected speedup: ~36x faster than sequential
+2025-08-11 12:02:55,561 - extraction_core - INFO -    CPU cores available: 36
+2025-08-11 12:02:55,561 - extraction_core - INFO -    Using ThreadPoolExecutor for I/O-bound GRIB operations
+2025-08-11 12:02:55,561 - memory_optimizer - INFO - 🔍 Starting memory monitoring for: Parallel day processing
+2025-08-11 12:02:55,561 - memory_optimizer - INFO -    Initial memory: 3.6 GB
+2025-08-11 12:02:55,562 - extraction_core - INFO - 📊 Processing day: 2019-01-01
+2025-08-11 12:02:56,842 - extraction_core - INFO - 📊 Found 49 wind grid points and 638 solar grid points
+2025-08-11 12:02:56,843 - extraction_core - INFO - 📁 Found 48 GRIB files for 2019-01-01
+2025-08-11 12:02:56,843 - extraction_core - INFO - 📋 Sample files: ['hrrr.t09z.wrfsubhf01.grib2', 'hrrr.t23z.wrfsubhf01.grib2', 'hrrr.t17z.wrfsubhf01.grib2']
+2025-08-11 12:02:56,844 - extraction_core - INFO - 📊 Grouped into 24 time groups for efficient processing
+2025-08-11 12:02:56,844 - extraction_core - INFO - 📁 Found 48 GRIB files for 2019-01-01
+2025-08-11 12:02:56,844 - extraction_core - INFO - 📋 Sample files: ['hrrr.t09z.wrfsubhf01.grib2', 'hrrr.t23z.wrfsubhf01.grib2', 'hrrr.t17z.wrfsubhf01.grib2']
+2025-08-11 12:02:56,844 - extraction_core - INFO - 📊 Grouped into 24 time groups for efficient processing
+2025-08-11 12:02:56,844 - extraction_core - INFO - 📊 Processing 24 file groups for 2019-01-01
+2025-08-11 12:03:26,137 - memory_optimizer - INFO - 📊 DataFrame optimized:
+2025-08-11 12:03:26,137 - memory_optimizer - INFO -    Original memory: 0.0 MB
+2025-08-11 12:03:26,138 - memory_optimizer - INFO -    Optimized memory: 0.0 MB
+2025-08-11 12:03:26,138 - memory_optimizer - INFO -    Memory saved: 0.0 MB (49.0%)
+2025-08-11 12:03:26,525 - memory_optimizer - INFO - 📊 DataFrame optimized:
+2025-08-11 12:03:26,525 - memory_optimizer - INFO -    Original memory: 0.0 MB
+2025-08-11 12:03:26,525 - memory_optimizer - INFO -    Optimized memory: 0.0 MB
+2025-08-11 12:03:26,525 - memory_optimizer - INFO -    Memory saved: 0.0 MB (49.0%)
+2025-08-11 12:03:27,052 - memory_optimizer - INFO - 📊 DataFrame optimized:
+2025-08-11 12:03:27,052 - memory_optimizer - INFO -    Original memory: 0.1 MB
+2025-08-11 12:03:27,053 - memory_optimizer - INFO -    Optimized memory: 0.1 MB
+2025-08-11 12:03:27,053 - memory_optimizer - INFO -    Memory saved: 0.1 MB (49.9%)
+2025-08-11 12:03:27,427 - memory_optimizer - INFO - 📊 DataFrame optimized:
+2025-08-11 12:03:27,427 - memory_optimizer - INFO -    Original memory: 0.1 MB
+2025-08-11 12:03:27,427 - memory_optimizer - INFO -    Optimized memory: 0.1 MB
+2025-08-11 12:03:27,428 - memory_optimizer - INFO -    Memory saved: 0.1 MB (49.9%)
+2025-08-11 12:03:27,626 - memory_optimizer - INFO - 📊 DataFrame optimized:
+2025-08-11 12:03:27,626 - memory_optimizer - INFO -    Original memory: 0.1 MB
+2025-08-11 12:03:27,626 - memory_optimizer - INFO -    Optimized memory: 0.1 MB
+2025-08-11 12:03:27,627 - memory_optimizer - INFO -    Memory saved: 0.1 MB (49.9%)
+2025-08-11 12:03:27,923 - memory_optimizer - INFO - 📊 DataFrame optimized:
+2025-08-11 12:03:27,923 - memory_optimizer - INFO -    Original memory: 0.1 MB
+2025-08-11 12:03:27,923 - memory_optimizer - INFO -    Optimized memory: 0.1 MB
+2025-08-11 12:03:27,923 - memory_optimizer - INFO -    Memory saved: 0.1 MB (49.9%)
+2025-08-11 12:03:28,190 - memory_optimizer - INFO - 📊 DataFrame optimized:
+2025-08-11 12:03:28,191 - memory_optimizer - INFO -    Original memory: 0.1 MB
+2025-08-11 12:03:28,191 - memory_optimizer - INFO -    Optimized memory: 0.1 MB
+2025-08-11 12:03:28,191 - memory_optimizer - INFO -    Memory saved: 0.1 MB (49.9%)
+2025-08-11 12:03:28,445 - memory_optimizer - INFO - 📊 DataFrame optimized:
+2025-08-11 12:03:28,445 - memory_optimizer - INFO -    Original memory: 0.1 MB
+2025-08-11 12:03:28,445 - memory_optimizer - INFO -    Optimized memory: 0.1 MB
+2025-08-11 12:03:28,446 - memory_optimizer - INFO -    Memory saved: 0.1 MB (49.9%)
+2025-08-11 12:03:28,719 - memory_optimizer - INFO - 📊 DataFrame optimized:
+2025-08-11 12:03:28,720 - memory_optimizer - INFO -    Original memory: 0.1 MB
+2025-08-11 12:03:28,720 - memory_optimizer - INFO -    Optimized memory: 0.1 MB
+2025-08-11 12:03:28,720 - memory_optimizer - INFO -    Memory saved: 0.1 MB (49.9%)
+2025-08-11 12:03:28,923 - memory_optimizer - INFO - 📊 DataFrame optimized:
+2025-08-11 12:03:28,923 - memory_optimizer - INFO -    Original memory: 0.1 MB
+2025-08-11 12:03:28,923 - memory_optimizer - INFO -    Optimized memory: 0.1 MB
+2025-08-11 12:03:28,923 - memory_optimizer - INFO -    Memory saved: 0.1 MB (49.9%)
+2025-08-11 12:03:29,093 - extraction_core - INFO - ✅ Calculated and saved wind speed for 2019-01-01
+2025-08-11 12:03:29,093 - memory_optimizer - INFO - 🧹 Forcing memory cleanup...
+2025-08-11 12:03:29,118 - memory_optimizer - INFO -    Garbage collected: 0 objects
+2025-08-11 12:03:29,119 - memory_optimizer - INFO -    Memory freed: -105.3 MB
+2025-08-11 12:03:29,120 - extraction_core - INFO - 📊 Completed day 2019-01-01: completed
+2025-08-11 12:03:29,120 - memory_optimizer - INFO - ✅ Operation completed: Parallel day processing
+2025-08-11 12:03:29,120 - memory_optimizer - INFO -    Duration: 33.56s
+2025-08-11 12:03:29,121 - memory_optimizer - INFO -    Memory change: +0.08 GB
+2025-08-11 12:03:29,121 - memory_optimizer - INFO -    Final memory: 3.7 GB
+2025-08-11 12:03:29,121 - __main__ - INFO - ✅ Day-by-day extraction completed!
+2025-08-11 12:03:29,122 - utils_enhanced - INFO - Operation completed: 33.6s, 0.00 files/s, 20.44 points/s
+2025-08-11 12:03:29,122 - __main__ - INFO - 
+📁 EXTRACTION SUMMARY
+2025-08-11 12:03:29,122 - __main__ - INFO - ========================================
+2025-08-11 12:03:29,123 - __main__ - INFO - 🌪️  Wind files: 0 files in /research/alij/extracted_data/wind/
+2025-08-11 12:03:29,123 - __main__ - INFO - ☀️  Solar files: 0 files in /research/alij/extracted_data/solar/
+2025-08-11 12:03:29,123 - __main__ - INFO - 📊 Processing Summary:
+2025-08-11 12:03:29,124 - __main__ - INFO -    Total days: 0
+2025-08-11 12:03:29,124 - __main__ - INFO -    Successful days: 1
+2025-08-11 12:03:29,124 - __main__ - INFO -    Failed days: 0
+2025-08-11 12:03:29,124 - __main__ - INFO -    Processing time: 0.0 hours
+2025-08-11 12:03:29,125 - __main__ - INFO -    Wind locations: 49
+2025-08-11 12:03:29,125 - __main__ - INFO -    Solar locations: 638
+2025-08-11 12:03:29,125 - __main__ - INFO - 📈 Performance Summary:
+2025-08-11 12:03:29,125 - __main__ - INFO -    Total duration: 33.6s
+2025-08-11 12:03:29,126 - __main__ - INFO -    Avg throughput: 0.00 files/s
+2025-08-11 12:03:29,126 - __main__ - INFO -    Peak memory: 3.7 GB
+2025-08-11 12:03:29,126 - __main__ - INFO -    Avg CPU: 2.7%
+2025-08-11 12:03:29,126 - __main__ - ERROR - 
+❌ Enhanced extraction failed!

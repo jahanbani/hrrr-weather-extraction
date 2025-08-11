@@ -40,6 +40,24 @@ logger = logging.getLogger(__name__)
 # Import our consolidated utilities
 from prereise_essentials import get_grib_data_path, formatted_filename
 
+def _latlon_to_unit_vectors(latitudes_deg: np.ndarray, longitudes_deg: np.ndarray) -> np.ndarray:
+    """Convert arrays of lat/lon in degrees to 3D unit vectors for geodesic distance.
+
+    Args:
+        latitudes_deg: 1D array of latitudes in degrees
+        longitudes_deg: 1D array of longitudes in degrees
+
+    Returns:
+        An (N, 3) array of unit vectors on the sphere.
+    """
+    lat_rad = np.radians(latitudes_deg)
+    lon_rad = np.radians(longitudes_deg)
+    cos_lat = np.cos(lat_rad)
+    x = cos_lat * np.cos(lon_rad)
+    y = cos_lat * np.sin(lon_rad)
+    z = np.sin(lat_rad)
+    return np.column_stack((x, y, z)).astype(np.float64, copy=False)
+
 
 def extract_specific_points_daily_single_pass(
     wind_csv_path: str,
@@ -701,47 +719,66 @@ def _process_grib_files_for_day(date, datadir, hours_forecasted, wind_indices, s
 def _process_single_grib_file(file_path, wind_indices, solar_indices, grid_lats, grid_lons,
                              wind_points, solar_points, wind_selectors, solar_selectors,
                              wind_data, solar_data):
-    """Process a single GRIB file extracting all variables in one pass."""
+    """Process a single GRIB file extracting all variables in one pass.
+
+    Handles f01 subhourly offsets (15, 30, 45 minutes) by parsing GRIB message text
+    when needed, similar to backup implementation.
+    """
     try:
+        # Detect forecast type from filename (f00 vs f01)
+        fxx_match = re.search(r"wrfsubhf(\d{2})\.grib2$", os.path.basename(file_path))
+        fxx = fxx_match.group(1) if fxx_match else "00"
+
         with pygrib.open(file_path) as grbs:
-            # Read all GRIB messages once for maximum efficiency
             grb_messages = list(grbs)
-            
-            # Process each timestamp
+
             for grb in grb_messages:
-                timestamp = pd.Timestamp(
+                base_timestamp = pd.Timestamp(
                     year=grb.year, month=grb.month, day=grb.day,
                     hour=grb.hour, minute=grb.minute
                 )
-                
-                # Check if this is a wind variable and we have wind locations
-                if len(wind_indices) > 0:
-                    for var_key, short_name in wind_selectors.items():
-                        if grb.shortName == short_name:
-                            # Level check for wind variables
-                            if "80" in var_key and grb.level == 80:
-                                wind_values = _extract_values_for_points(grb, wind_indices, grid_lats, grid_lons)
-                                if wind_values is not None:
-                                    wind_columns = wind_points.pid.astype(str).tolist()
-                                    wind_data[var_key][timestamp] = dict(zip(wind_columns, wind_values))
+
+                # For f01 files, derive subhourly timestamps if encoded in message text
+                if fxx == "01":
+                    grb_str = str(grb)
+                    offsets = []
+                    for offset, minute in [(15, 15), (30, 30), (45, 45)]:
+                        if f"{offset}m mins" in grb_str or f"{offset} mins" in grb_str:
+                            offsets.append(minute)
+                    # If no explicit offsets found, still process as base timestamp to avoid data loss
+                    if not offsets:
+                        offsets = [0]
+                    timestamps = [base_timestamp + pd.Timedelta(minutes=m) for m in offsets]
+                else:
+                    timestamps = [base_timestamp]
+
+                for timestamp in timestamps:
+                    # Wind variables
+                    if len(wind_indices) > 0:
+                        for var_key, short_name in wind_selectors.items():
+                            if grb.shortName == short_name:
+                                if "80" in var_key and getattr(grb, "level", None) == 80:
+                                    wind_values = _extract_values_for_points(grb, wind_indices, grid_lats, grid_lons)
+                                    if wind_values is not None:
+                                        wind_columns = wind_points.pid.astype(str).tolist()
+                                        wind_data[var_key][timestamp] = dict(zip(wind_columns, wind_values))
+                                    break
+                                elif "10" in var_key and getattr(grb, "level", None) == 10:
+                                    wind_values = _extract_values_for_points(grb, wind_indices, grid_lats, grid_lons)
+                                    if wind_values is not None:
+                                        wind_columns = wind_points.pid.astype(str).tolist()
+                                        wind_data[var_key][timestamp] = dict(zip(wind_columns, wind_values))
+                                    break
+
+                    # Solar variables
+                    if len(solar_indices) > 0:
+                        for var_key, short_name in solar_selectors.items():
+                            if grb.shortName == short_name:
+                                solar_values = _extract_values_for_points(grb, solar_indices, grid_lats, grid_lons)
+                                if solar_values is not None:
+                                    solar_columns = solar_points.pid.astype(str).tolist()
+                                    solar_data[var_key][timestamp] = dict(zip(solar_columns, solar_values))
                                 break
-                            elif "10" in var_key and grb.level == 10:
-                                wind_values = _extract_values_for_points(grb, wind_indices, grid_lats, grid_lons)
-                                if wind_values is not None:
-                                    wind_columns = wind_points.pid.astype(str).tolist()
-                                    wind_data[var_key][timestamp] = dict(zip(wind_columns, wind_values))
-                                break
-                
-                # Check if this is a solar variable and we have solar locations
-                if len(solar_indices) > 0:
-                    for var_key, short_name in solar_selectors.items():
-                        if grb.shortName == short_name:
-                            solar_values = _extract_values_for_points(grb, solar_indices, grid_lats, grid_lons)
-                            if solar_values is not None:
-                                solar_columns = solar_points.pid.astype(str).tolist()
-                                solar_data[var_key][timestamp] = dict(zip(solar_columns, solar_values))
-                            break
-                            
     except Exception as e:
         logger.error(f"❌ Error processing GRIB file {file_path}: {e}")
 
@@ -780,38 +817,72 @@ def _extract_grid_coordinates(date, datadir):
 
 
 def _find_closest_grid_points(points, grid_lats, grid_lons):
-    """Find the closest grid points for given locations."""
-    if grid_lats is None or grid_lons is None:
+    """Find the closest grid points for given locations using KDTree on unit vectors.
+
+    Uses spherical geometry for better accuracy than Euclidean degrees.
+    """
+    if grid_lats is None or grid_lons is None or points is None or len(points) == 0:
         return []
-    
+
     try:
-        # Flatten grid coordinates
-        grid_points = np.column_stack([grid_lats.flatten(), grid_lons.flatten()])
-        
-        # Convert points to numpy array
-        point_coords = np.column_stack([points.lat.values, points.lon.values])
-        
-        # Find closest points using scipy
-        from scipy.spatial import cKDTree
-        tree = cKDTree(grid_points)
-        distances, indices = tree.query(point_coords)
-        
+        # Flatten grid coordinates and convert to unit vectors
+        grid_lats_flat = grid_lats.flatten()
+        grid_lons_flat = grid_lons.flatten()
+        grid_uv = _latlon_to_unit_vectors(grid_lats_flat, grid_lons_flat)
+
+        # Build KDTree on grid unit vectors
+        from scipy.spatial import KDTree
+
+        tree = KDTree(grid_uv)
+
+        # Convert point coordinates to unit vectors and query nearest grid indices
+        point_uv = _latlon_to_unit_vectors(points.lat.values, points.lon.values)
+        _, indices = tree.query(point_uv)
         return indices
     except Exception as e:
-        logger.error(f"Error finding closest grid points: {e}")
-        return []
+        logger.error(f"Error finding closest grid points with KDTree: {e}")
+        # Fallback to cKDTree on lat/lon if unit-vector approach fails
+        try:
+            from scipy.spatial import cKDTree
+
+            grid_points = np.column_stack([grid_lats.flatten(), grid_lons.flatten()])
+            point_coords = np.column_stack([points.lat.values, points.lon.values])
+            tree = cKDTree(grid_points)
+            _, indices = tree.query(point_coords)
+            return indices
+        except Exception as e2:
+            logger.error(f"Fallback nearest-neighbor failed: {e2}")
+            return []
 
 
 def _extract_values_for_points(grb, point_indices, grid_lats, grid_lons):
-    """Extract values at specific grid points."""
+    """Extract values at specific grid points with memory-conscious fallback.
+
+    Returns float32 to reduce memory footprint.
+    """
     try:
-        # Get the data values
-        values = grb.values
-        
-        # Extract values at the specified indices
-        point_values = values.flatten()[point_indices]
-        
-        return point_values
+        n_lats, n_lons = grid_lats.shape
+        # Convert flat indices to 2D indices once
+        lat_indices, lon_indices = np.unravel_index(point_indices, (n_lats, n_lons))
+        values_2d = grb.values
+        point_values = values_2d[lat_indices, lon_indices]
+        return np.asarray(point_values, dtype=np.float32)
+    except MemoryError as e:
+        logger.warning(f"MemoryError in extraction, falling back to batched mode: {e}")
+        try:
+            batch_size = 1000
+            n_lats, n_lons = grid_lats.shape
+            collected = []
+            for start in range(0, len(point_indices), batch_size):
+                batch = point_indices[start:start + batch_size]
+                bi, bj = np.unravel_index(batch, (n_lats, n_lons))
+                vals = grb.values[bi, bj]
+                collected.append(vals)
+                del vals
+            return np.asarray(np.concatenate(collected), dtype=np.float32)
+        except Exception as e2:
+            logger.error(f"Batched extraction failed: {e2}")
+            return None
     except Exception as e:
         logger.error(f"Error extracting values for points: {e}")
         return None
